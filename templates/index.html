@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .hero-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+    padding: 56px 0 48px;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #FEF3C7; border: 1px solid #FDE68A;
+    color: #92400E; font-size: 0.8rem; font-weight: 700;
+    padding: 6px 16px; border-radius: 999px; width: fit-content;
+  }
+  .hero-title {
+    font-size: clamp(2.2rem, 4vw, 3.6rem);
+    font-weight: 900; line-height: 1.05;
+    letter-spacing: -0.04em; color: #111827; margin: 0;
+  }
+  .hero-title span { color: #F59E0B; }
+  .hero-img-card {
+    background: #fff; border-radius: 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.13);
+    padding: 24px; position: relative; overflow: hidden;
+  }
+  .hero-img-card::before {
+    content: ''; position: absolute;
+    top: -40px; right: -40px;
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, #FDE68A, #F59E0B);
+    border-radius: 50%; filter: blur(60px); opacity: 0.25;
+  }
+  .hero-img-card img {
+    width: 100%; height: 340px;
+    object-fit: contain; position: relative; z-index: 1;
+  }
+  .floating-tag {
+    position: absolute; bottom: 20px; left: 20px;
+    background: #fff; border-radius: 14px;
+    padding: 10px 16px; box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+    display: flex; align-items: center; gap: 10px;
+    border: 1px solid #E5E7EB; z-index: 2;
+  }
+  .stat-row {
+    display: flex; gap: 28px; margin-top: 8px;
+  }
+  .stat-item { text-align: center; }
+  .stat-num { font-size: 1.5rem; font-weight: 900; color: #111827; display: block; }
+  .stat-label { font-size: 0.72rem; color: #6B7280; }
+  .stat-divider { width: 1px; background: #E5E7EB; }
+
+  /* Features */
+  .features-grid {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    gap: 16px; margin-bottom: 56px;
+  }
+  .feature-card {
+    background: #fff; border-radius: 16px; padding: 20px 18px;
+    display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    border: 1px solid #F3F4F6;
+  }
+
+  /* Section header */
+  .section-head {
+    display: flex; justify-content: space-between;
+    align-items: flex-end; margin-bottom: 24px;
+  }
+  .section-title { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.02em; margin: 0 0 4px; }
+  .section-sub { color: #6B7280; font-size: 0.85rem; margin: 0; }
+  .section-link { color: #111827; font-weight: 600; font-size: 0.85rem; white-space: nowrap; }
+
+  /* Bestseller cards */
+  .bs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px; margin-bottom: 56px;
+  }
+  .bs-card {
+    background: #fff; border-radius: 20px; overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    border: 1px solid #F3F4F6;
+    transition: transform 0.25s, box-shadow 0.25s;
+    display: flex; flex-direction: column;
+  }
+  .bs-card:hover { transform: translateY(-6px); box-shadow: 0 16px 48px rgba(0,0,0,0.12); }
+  .bs-img { width: 100%; height: 190px; object-fit: cover; display: block; transition: transform 0.4s; }
+  .bs-card:hover .bs-img { transform: scale(1.05); }
+  .bs-body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+  .bs-cat { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #6B7280; margin-bottom: 4px; }
+  .bs-name { font-weight: 800; font-size: 0.95rem; color: #111827; margin: 0 0 10px; line-height: 1.3; flex: 1; }
+  .bs-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+  .bs-price { font-size: 1.1rem; font-weight: 900; color: #111827; }
+  .bs-btn {
+    padding: 8px 18px; border-radius: 999px;
+    background: #111827; color: #fff;
+    font-size: 0.78rem; font-weight: 700;
+    text-decoration: none; transition: opacity 0.2s;
+  }
+  .bs-btn:hover { opacity: 0.85; }
+  .bs-badge {
+    position: absolute; top: 10px; left: 10px;
+    font-size: 0.65rem; font-weight: 700;
+    padding: 3px 10px; border-radius: 999px; color: #fff;
+  }
+
+  /* Category cards */
+  .cat-grid {
+    display: grid; grid-template-columns: repeat(5,1fr);
+    gap: 14px; margin-bottom: 56px;
+  }
+  .cat-card-link {
+    background: #fff; border-radius: 18px; padding: 24px 12px;
+    text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    border: 1.5px solid #F3F4F6; display: block;
+    text-decoration: none; transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .cat-card-link:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.1); }
+  .cat-icon-wrap {
+    width: 64px; height: 64px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem; margin: 0 auto 10px;
+  }
+  .cat-name { font-weight: 700; font-size: 0.88rem; color: #111827; }
+  .cat-count { font-size: 0.72rem; color: #6B7280; margin-top: 2px; }
+
+  /* Promo */
+  .promo-banner {
+    background: linear-gradient(135deg, #111827 0%, #1F2937 100%);
+    border-radius: 24px; padding: 48px 48px;
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 56px;
+    overflow: hidden; position: relative;
+  }
+  .promo-banner::before {
+    content: ''; position: absolute;
+    top: -60px; right: 280px;
+    width: 250px; height: 250px;
+    background: #F59E0B; border-radius: 50%;
+    filter: blur(90px); opacity: 0.12;
+  }
+  .promo-imgs {
+    display: flex; gap: -20px; position: relative; z-index: 1;
+  }
+  .promo-imgs img {
+    width: 140px; height: 140px; object-fit: contain;
+    filter: drop-shadow(0 8px 24px rgba(0,0,0,0.4));
+    margin-left: -20px;
+  }
+  .promo-imgs img:first-child { margin-left: 0; }
+
+  @media (max-width: 900px) {
+    .hero-wrap { grid-template-columns: 1fr; gap: 32px; padding: 32px 0 24px; }
+    .features-grid { grid-template-columns: 1fr; }
+    .cat-grid { grid-template-columns: repeat(3,1fr); }
+    .promo-banner { flex-direction: column; gap: 24px; padding: 32px 24px; text-align: center; }
+  }
+  @media (max-width: 600px) {
+    .bs-grid { grid-template-columns: repeat(2,1fr); gap: 12px; }
+    .cat-grid { grid-template-columns: repeat(2,1fr); }
+  }
+</style>
+
+<!-- ── RETAIL HERO ── -->
+<section class="retail-hero">
+  <div class="retail-hero-card">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center;">
+
+      <!-- Left -->
+      <div>
+        <span class="eyebrow">The Dream Shoe Collection</span>
+        <h1 class="hero-title">
+          Find your perfect pair for
+          <span class="accent">every court, track, and street</span>
+        </h1>
+        <p class="hero-copy">
+          Explore authentic basketball, running, training, football, and lifestyle shoes in one place.
+          Premium quality, unbeatable style — delivered to Barili.
+        </p>
+        <div class="hero-actions">
+          <a href="{{ url_for('home') }}" class="hero-btn-main">Shop Now</a>
+          <a href="{{ url_for('about') }}" class="hero-btn-alt">About Us</a>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat"><strong>5+</strong><span>Categories</span></div>
+          <div class="hero-stat"><strong>25+</strong><span>Top brands</span></div>
+          <div class="hero-stat"><strong>100%</strong><span>Authentic</span></div>
+        </div>
+      </div>
+
+      <!-- Right slider -->
+      <div class="hero-slider-wrap">
+        <div class="hero-slider">
+          <span class="slide-tag" id="slide-tag">Featured Drop</span>
+          <h3 class="slide-title" id="slide-title">GT Cut 3</h3>
+          <p class="slide-copy" id="slide-copy">Designed for the game's biggest moments with full-length cushioning and explosive court feel.</p>
+          <div class="slide-image-frame">
+            <img id="slide-image" src="/static/images/Gt Cut.png" alt="Featured shoe">
+          </div>
+          <div class="slide-meta">
+            <div class="slide-price" id="slide-price">₱3,499.99</div>
+            <div class="slide-controls">
+              <button class="slider-arrow" id="prev-slide" type="button">&#8249;</button>
+              <button class="slider-arrow" id="next-slide" type="button">&#8250;</button>
+            </div>
+          </div>
+          <div class="slider-dots" id="slider-dots"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+  const heroSlides = [
+    { tag: 'Basketball', title: 'GT Cut 3', copy: "Designed for the game's biggest moments with full-length cushioning and explosive court feel.", img: '/static/images/Gt Cut.png', price: '\u20b13,499.99' },
+    { tag: 'Basketball', title: 'Ja Morant 3', copy: 'Built for explosive guards with Lightstrike Pro cushioning and dynamic ankle support.', img: '/static/images/JaMorant3_basketball.png', price: '\u20b13,999.99' },
+    { tag: 'Basketball', title: 'Curry 13', copy: "Stephen Curry's signature shoe built for elite shooting, quick cuts, and all-court dominance.", img: '/static/images/Curry13_basketball.png', price: '\u20b14,699.99' },
+    { tag: 'Basketball', title: 'Jordan Tatum 2', copy: 'Engineered for versatile forwards with all-around court dominance and responsive cushioning.', img: '/static/images/tatum_basketball.png', price: '\u20b14,199.99' },
+    { tag: 'Basketball', title: 'Nike Sabrina 2', copy: 'Lightweight foam cushioning for explosive lateral movement and precision on the court.', img: '/static/images/sabrina2_basketball.png', price: '\u20b13,799.99' },
+  ];
+  let hCurrent = 0;
+  const dotsWrap = document.getElementById('slider-dots');
+  heroSlides.forEach((_, i) => {
+    const d = document.createElement('button');
+    d.className = 'slider-dot' + (i === 0 ? ' active' : '');
+    d.type = 'button';
+    d.onclick = () => goHero(i);
+    dotsWrap.appendChild(d);
+  });
+  function goHero(n) {
+    hCurrent = (n + heroSlides.length) % heroSlides.length;
+    const s = heroSlides[hCurrent];
+    document.getElementById('slide-tag').textContent = s.tag;
+    document.getElementById('slide-title').textContent = s.title;
+    document.getElementById('slide-copy').textContent = s.copy;
+    document.getElementById('slide-image').src = s.img;
+    document.getElementById('slide-price').textContent = s.price;
+    dotsWrap.querySelectorAll('.slider-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === hCurrent);
+    });
+  }
+  document.getElementById('next-slide').onclick = () => goHero(hCurrent + 1);
+  document.getElementById('prev-slide').onclick = () => goHero(hCurrent - 1);
+  let heroAuto = setInterval(() => goHero(hCurrent + 1), 3000);
+  document.querySelector('.hero-slider').addEventListener('mouseenter', () => clearInterval(heroAuto));
+  document.querySelector('.hero-slider').addEventListener('mouseleave', () => { heroAuto = setInterval(() => goHero(hCurrent + 1), 3000); });
+</script>
+
+<!-- ── FEATURES ── -->
+<div class="features-grid">
+  {% for icon, title, desc in [('🚚','Free Shipping','On all orders over ₱80'),('🔄','Easy Returns','30-day hassle-free returns'),('⭐','100% Authentic','Genuine products guaranteed')] %}
+  <div class="feature-card">
+    <span style="font-size:2rem; flex-shrink:0;">{{ icon }}</span>
+    <div>
+      <div style="font-weight:700; font-size:0.9rem; margin-bottom:2px;">{{ title }}</div>
+      <div style="color:#6B7280; font-size:0.78rem;">{{ desc }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ── BESTSELLERS ── -->
+<div class="section-head">
+  <div>
+    <h2 class="section-title">🏆 Bestsellers</h2>
+    <p class="section-sub">Our most loved shoes right now</p>
+  </div>
+  <a href="{{ url_for('login') }}" class="section-link">View all →</a>
+</div>
+
+{% set bestsellers = [
+  ('GT Cut 3', 'Basketball', 3499.99, 'Gt Cut.png', '#F97316', 'Bestseller'),
+  ('Ja Morant 3', 'Basketball', 3999.99, 'JaMorant3_basketball.png', '#EF4444', 'Hot Pick'),
+  ('Kobe 9', 'Basketball', 3199.99, 'KOBE 9_basketball.png', '#8B5CF6', 'Top Rated'),
+  ('Jordan Tatum 2', 'Basketball', 4199.99, 'tatum_basketball.png', '#10B981', 'New Arrival'),
+  ('Nike Sabrina 3', 'Basketball', 3599.99, 'Sabrina3_basketball.png', '#3B82F6', 'Trending'),
+  ('Curry 13', 'Basketball', 4699.99, 'Curry13_basketball.png', '#F59E0B', 'Bestseller'),
+] %}
+
+<div class="bs-grid">
+  {% for name, cat, price, img, color, badge in bestsellers %}
+  <article class="bs-card">
+    <div style="position:relative; overflow:hidden; height:190px; background:#F9FAFB;">
+      <img src="/static/images/{{ img }}" alt="{{ name }}" class="bs-img" />
+      <span class="bs-badge" style="background:{{ color }};">{{ badge }}</span>
+      <div style="position:absolute; inset:0; background:rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.25s;" class="bs-overlay">
+        <a href="{{ url_for('login') }}" style="background:#fff; color:#111827; font-weight:700; font-size:0.82rem; padding:9px 22px; border-radius:999px;">Quick View</a>
+      </div>
+    </div>
+    <div class="bs-body">
+      <div class="bs-cat">{{ cat }}</div>
+      <div class="bs-name">{{ name }}</div>
+      <div class="bs-footer">
+        <span class="bs-price">₱{{ '%.2f'|format(price) }}</span>
+        <a href="{{ url_for('login') }}" class="bs-btn">Buy Now</a>
+      </div>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+
+<!-- ── SHOP BY CATEGORY ── -->
+<div class="section-head">
+  <div>
+    <h2 class="section-title">🗂️ Shop by Category</h2>
+    <p class="section-sub">Find the perfect shoe for every sport</p>
+  </div>
+  <a href="{{ url_for('home') }}" class="section-link">Browse all →</a>
+</div>
+
+{% set cat_data = [
+  ('Running', '🏃', '#EF4444', '#FEE2E2'),
+  ('Basketball', '🏀', '#F97316', '#FFEDD5'),
+  ('Training', '🏋️', '#8B5CF6', '#EDE9FE'),
+  ('Football', '⚽', '#10B981', '#D1FAE5'),
+  ('Lifestyle', '✨', '#3B82F6', '#DBEAFE'),
+] %}
+
+<div class="cat-grid">
+  {% for cat, icon, color, bg in cat_data %}
+  <a href="{{ url_for('home', category=cat) }}" class="cat-card-link">
+    <div class="cat-icon-wrap" style="background:{{ bg }};">{{ icon }}</div>
+    <div class="cat-name">{{ cat }}</div>
+    <div class="cat-count" style="color:{{ color }}; font-weight:600;">Shop now →</div>
+  </a>
+  {% endfor %}
+</div>
+
+<!-- ── PROMO BANNER ── -->
+<div class="promo-banner">
+  <div style="position:relative; z-index:1; max-width:480px;">
+    <div style="color:#F59E0B; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; margin-bottom:10px;">Limited Time Offer</div>
+    <h2 style="color:#fff; font-size:2rem; font-weight:900; letter-spacing:-0.03em; margin:0 0 12px; line-height:1.15;">
+      Free Shipping on<br>Orders Over ₱80
+    </h2>
+    <p style="color:#9CA3AF; font-size:0.9rem; margin:0 0 24px; line-height:1.6;">
+      Shop your favorite shoes and get them delivered to your doorstep fast.
+    </p>
+    <a href="{{ url_for('register') }}" style="display:inline-block; background:#F59E0B; color:#fff; font-weight:700; padding:13px 30px; border-radius:999px; font-size:0.95rem; text-decoration:none; transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+      Get Started →
+    </a>
+  </div>
+  <div class="promo-imgs">
+    <img src="/static/images/sabrina2_basketball.png" alt="Sabrina 2" />
+    <img src="/static/images/jordanluka_basketball.png" alt="Jordan Luka" />
+    <img src="/static/images/Curry13_basketball.png" alt="Curry 13" />
+  </div>
+</div>
+
+<!-- ── TRENDING NOW ── -->
+<div class="section-head">
+  <div>
+    <h2 class="section-title">🔥 Trending Now</h2>
+    <p class="section-sub">Most viewed shoes this week</p>
+  </div>
+  <a href="{{ url_for('login') }}" class="section-link">See all →</a>
+</div>
+
+<div class="bs-grid" style="margin-bottom:48px;">
+  {% for product in trending %}
+  <article class="bs-card">
+    <div style="position:relative; overflow:hidden; height:190px; background:#F9FAFB;">
+      <img src="{{ product.image_url if product.image_url else 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80' }}"
+        alt="{{ product.name }}" class="bs-img" />
+      <span class="bs-badge" style="background:#22c55e;">New</span>
+    </div>
+    <div class="bs-body">
+      <div class="bs-cat">{{ product.category }}</div>
+      <div class="bs-name">{{ product.name }}</div>
+      <div class="bs-footer">
+        <span class="bs-price">₱{{ '%.2f'|format(product.price) }}</span>
+        <a href="{{ url_for('login') }}" class="bs-btn">View</a>
+      </div>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+
+<!-- ── ABOUT DREAM SHOE ── -->
+<div style="background:linear-gradient(135deg,#F9FAFB,#FFFFFF); border-radius:24px; padding:48px 40px; margin-bottom:56px; border:1px solid #E5E7EB;">
+  <div style="text-align:center; max-width:700px; margin:0 auto;">
+    <span style="display:inline-block; background:#FEF3C7; border:1px solid #FDE68A; color:#92400E; font-size:0.75rem; font-weight:700; padding:5px 14px; border-radius:999px; margin-bottom:16px; text-transform:uppercase; letter-spacing:0.08em;">About Us</span>
+    <h2 style="font-size:2rem; font-weight:900; letter-spacing:-0.03em; margin:0 0 16px; color:#111827;">Welcome to The Dream Shoe - Barili</h2>
+    <p style="font-size:1rem; color:#6B7280; line-height:1.8; margin:0 0 20px;">
+      Your dream shoe is just a click away. We are Barili's premier destination for authentic sports and lifestyle footwear. From basketball courts to running tracks, football fields to everyday streets — we bring you the finest selection of shoes that match your passion and style.
+    </p>
+    <p style="font-size:0.95rem; color:#6B7280; line-height:1.7; margin:0;">
+      Every pair at The Dream Shoe is 100% authentic, carefully curated for quality and performance. We believe that the right shoe can transform your game, your workout, and your day. Step into your dream with us. 👟
+    </p>
+    <div style="display:flex; gap:12px; justify-content:center; margin-top:28px;">
+      <a href="{{ url_for('about') }}" class="btn" style="border-radius:999px; padding:12px 28px; font-size:0.9rem;">Learn More</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Hover overlay for bestseller cards
+  document.querySelectorAll('.bs-card').forEach(card => {
+    const overlay = card.querySelector('.bs-overlay');
+    if (overlay) {
+      card.addEventListener('mouseenter', () => overlay.style.opacity = '1');
+      card.addEventListener('mouseleave', () => overlay.style.opacity = '0');
+    }
+  });
+</script>
+
+{% endblock %}

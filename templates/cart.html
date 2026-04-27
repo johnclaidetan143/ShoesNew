@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+  @keyframes fadeOut { from { opacity:1; transform:scale(1); } to { opacity:0; transform:scale(0.95); } }
+  @keyframes modalIn { from { transform:scale(0.9); opacity:0; } to { transform:scale(1); opacity:1; } }
+  @keyframes slideUp { from { transform:translateX(-50%) translateY(16px); opacity:0; } to { transform:translateX(-50%) translateY(0); opacity:1; } }
+  .remove-btn {
+    background: none; border: none; color: #f87171;
+    font-size: 1.1rem; cursor: pointer; padding: 6px 8px;
+    border-radius: 8px; transition: background 0.2s, color 0.2s; line-height: 1;
+  }
+  .remove-btn:hover { background: #FEE2E2; color: #DC2626; }
+</style>
+
+<!-- ── CART ── -->
+<div class="page-card">
+  <h2 style="margin:0 0 4px; font-size:1.2rem; font-weight:800;">🛒 Your Cart</h2>
+  <p class="tagline" style="margin:0 0 16px;">{{ total_qty }} item{{ 's' if total_qty != 1 }}</p>
+
+  {% if items %}
+  <div style="display:grid; gap:12px;" id="cartList">
+    {% for item in items %}
+    <div id="row-{{ item.id }}" style="display:grid; grid-template-columns:110px 1fr; gap:14px; align-items:center; background:#F9FAFB; border-radius:16px; padding:14px; border:1px solid #E5E7EB;">
+
+      <!-- Image -->
+      <div style="width:110px; height:110px; border-radius:12px; background:#F3F4F6; border:1px solid #E5E7EB; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+        {% if item.product.image_url %}
+        <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" style="width:100%; height:100%; object-fit:cover;" />
+        {% else %}
+        <span style="font-size:2.5rem;">👟</span>
+        {% endif %}
+      </div>
+
+      <!-- Info -->
+      <div>
+        <div style="font-weight:700; font-size:0.92rem; margin-bottom:2px;">{{ item.product.name }}</div>
+        <div style="color:var(--muted); font-size:0.78rem; margin-bottom:8px;">₱{{ '%.2f'|format(item.product.price) }} each · {{ item.product.category }}</div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+          <!-- Update qty -->
+          <form method="post" action="{{ url_for('update_cart', item_id=item.id) }}" style="display:flex; align-items:center; gap:6px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="number" name="quantity" min="1" max="{{ item.product.stock }}" value="{{ item.quantity }}"
+              style="width:60px; padding:6px 10px; border-radius:10px; border:1px solid #E5E7EB; font-size:0.85rem; text-align:center;" />
+            <button class="btn" type="submit" name="update" style="padding:7px 14px; font-size:0.78rem; border-radius:10px;">Update</button>
+          </form>
+
+          <!-- Price + Remove -->
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-weight:800; color:var(--primary); font-size:0.95rem;">₱{{ '%.2f'|format(item.subtotal()) }}</span>
+            <form method="post" action="{{ url_for('remove_cart', item_id=item.id) }}" onsubmit="return confirm('Remove this item?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="remove-btn" title="Remove item">✕</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Empty slot -->
+  <div style="display:grid; grid-template-columns:110px 1fr; gap:14px; align-items:center; background:#F9FAFB; border-radius:16px; padding:14px; border:2px dashed #E5E7EB; margin-top:12px;">
+    <div style="width:110px; height:110px; border-radius:12px; background:#F3F4F6; border:2px dashed #D1D5DB; display:flex; align-items:center; justify-content:center;">
+      <span style="font-size:2rem; opacity:0.3;">👟</span>
+    </div>
+    <div>
+      <div style="font-weight:600; font-size:0.88rem; color:#D1D5DB; margin-bottom:4px;">Add another item</div>
+      <div style="color:#E5E7EB; font-size:0.78rem; margin-bottom:12px;">Browse our collection and add more shoes.</div>
+      <a href="{{ url_for('home') }}" style="display:inline-block; padding:7px 18px; background:#F3F4F6; color:var(--muted); border-radius:999px; font-size:0.8rem; font-weight:600; text-decoration:none;">+ Browse Shop</a>
+    </div>
+  </div>
+
+  {% else %}
+  <div style="text-align:center; padding:40px 0;">
+    <div style="font-size:3.5rem; margin-bottom:12px;">🛒</div>
+    <p style="font-weight:700; font-size:1.1rem; margin:0 0 6px;">Your cart is empty</p>
+    <p class="tagline" style="margin:0 0 20px;">Add some products to get started.</p>
+    <a href="{{ url_for('home') }}" class="btn" style="border-radius:999px; padding:12px 28px;">Browse Shop</a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ── ORDER SUMMARY ── -->
+{% if items %}
+<div class="page-card">
+  <h3 style="margin:0 0 14px; font-size:1rem; font-weight:700;">🧾 Order Summary</h3>
+  <div style="display:grid; gap:8px;">
+    <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+      <span style="color:var(--muted);">Subtotal ({{ total_qty }} item{{ 's' if total_qty != 1 }})</span>
+      <span>₱{{ '%.2f'|format(subtotal) }}</span>
+    </div>
+    <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+      <span style="color:var(--muted);">Delivery</span>
+      <span style="color:var(--primary); font-weight:600;">Free</span>
+    </div>
+    <div style="border-top:1px solid #f0f0f0; padding-top:10px; display:flex; justify-content:space-between; font-size:1rem; font-weight:800;">
+      <span>Total</span>
+      <span style="color:var(--primary);">₱{{ '%.2f'|format(subtotal) }}</span>
+    </div>
+  </div>
+  <a href="{{ url_for('checkout') }}" class="btn" style="display:block; text-align:center; margin-top:16px; padding:14px; border-radius:16px;">
+    Proceed to Checkout →
+  </a>
+</div>
+{% endif %}
+
+{% endblock %}
+

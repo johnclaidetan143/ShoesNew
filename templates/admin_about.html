@@ -1,0 +1,38 @@
+{% extends "admin/base.html" %}
+{% block page_title %}About Store{% endblock %}
+{% block content %}
+
+<div class="table-card" style="margin-bottom:16px;">
+  <div class="table-head" style="display:flex; gap:12px; align-items:center; justify-content:space-between;">
+    <h3>About The Dream Shoe - Barili</h3>
+    <a href="{{ url_for('admin_product_new') }}" class="btn-accent">+ Add Product</a>
+  </div>
+  <div style="padding:20px 24px; color:#374151; line-height:1.75; font-size:0.9rem;">
+    <p style="margin:0 0 12px;">
+      The Dream Shoe - Barili is a local footwear store focused on authentic performance and lifestyle shoes for the Barili, Cebu community.
+      The shop carries Basketball, Running, Training, Football, and Lifestyle categories from trusted brands.
+    </p>
+    <p style="margin:0;">
+      This admin page serves as a quick brand reference so product listings, descriptions, and customer-facing messages stay consistent across the platform.
+    </p>
+  </div>
+</div>
+
+<div class="stat-cards" style="grid-template-columns:repeat(2, 1fr);">
+  <div class="stat-card">
+    <div class="stat-card-icon" style="background:#FEF3C7;">1</div>
+    <div style="font-weight:800; margin-bottom:6px;">Mission</div>
+    <div class="stat-card-label" style="line-height:1.6;">
+      Make premium shoes accessible in Barili through fair pricing, dependable quality, and a smooth online buying experience.
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-icon" style="background:#DBEAFE;">2</div>
+    <div style="font-weight:800; margin-bottom:6px;">Admin Focus</div>
+    <div class="stat-card-label" style="line-height:1.6;">
+      Keep catalog details accurate, monitor stock and order status, and maintain clear customer updates.
+    </div>
+  </div>
+</div>
+
+{% endblock %}

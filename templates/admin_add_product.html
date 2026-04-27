@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-card" style="max-width:560px; margin:40px auto;">
+  <h2 style="margin:0 0 4px; font-size:1.4rem; font-weight:900;">Add New Product</h2>
+  <p style="color:var(--muted); font-size:0.88rem; margin:0 0 28px;">Admin Panel</p>
+
+  <form method="post" novalidate>
+    {{ form.hidden_tag() }}
+
+    {% for field in [form.name, form.category, form.price, form.stock, form.description, form.image_url] %}
+    <div style="margin-bottom:18px;">
+      {{ field.label(style="display:block; font-weight:600; font-size:0.88rem; margin-bottom:6px; color:var(--text);") }}
+      {{ field(style="width:100%; padding:10px 14px; border:1.5px solid #E5E7EB; border-radius:10px; font-size:0.95rem; outline:none; box-sizing:border-box; background:#fff;") }}
+      {% if field.errors %}
+        {% for e in field.errors %}
+        <p style="color:#EF4444; font-size:0.8rem; margin:4px 0 0;">{{ e }}</p>
+        {% endfor %}
+      {% endif %}
+    </div>
+    {% endfor %}
+
+    <div style="display:flex; gap:12px; margin-top:8px;">
+      {{ form.submit(style="flex:1; padding:12px; background:var(--primary); color:#fff; border:none; border-radius:999px; font-weight:700; font-size:0.95rem; cursor:pointer;") }}
+      <a href="{{ url_for('home') }}" style="flex:1; padding:12px; background:#F3F4F6; color:var(--text); border-radius:999px; font-weight:700; font-size:0.95rem; text-align:center; text-decoration:none;">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

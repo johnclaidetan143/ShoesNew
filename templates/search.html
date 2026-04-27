@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="page-card" style="margin-bottom:16px;">
+  <form method="get" action="{{ url_for('search') }}">
+    <input type="hidden" name="category" value="{{ active_category }}">
+    <div style="display:flex; gap:8px; align-items:center; background:#F9FAFB; border:1.5px solid #E5E7EB; border-radius:999px; padding:8px 8px 8px 18px;">
+      <span>🔍</span>
+      <input type="text" name="q" value="{{ query_text }}" placeholder="Search running, basketball, training shoes..." style="flex:1; border:none; outline:none; background:transparent; font-size:0.9rem; color:var(--text);">
+      <button type="submit" class="btn" style="padding:9px 20px; border-radius:999px; font-size:0.85rem;">Search</button>
+    </div>
+  </form>
+  <div class="category-tabs" style="margin-top:14px;">
+    {% for cat in categories %}
+    <a href="{{ url_for('search', category=cat, q=query_text) }}"
+      class="{{ 'active' if active_category == cat }}"
+      style="white-space:nowrap; padding:10px 14px; border-radius:28px; font-size:0.85rem; display:inline-block;">
+      {{ cat }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+<div style="padding:0 4px; margin-bottom:12px;">
+  <div style="font-weight:800; font-size:1rem;">
+    {% if query_text %}Results for "{{ query_text }}"{% else %}{{ active_category }} Shoes{% endif %}
+  </div>
+  <div style="color:var(--muted); font-size:0.78rem;">{{ results|length }} style{{ 's' if results|length != 1 }}</div>
+</div>
+
+{% if results %}
+<section class="product-grid">
+  {% for product in results %}
+  <article class="product-card" style="display:flex; flex-direction:column; gap:8px; overflow:hidden;">
+    <div style="position:relative; margin:-16px -16px 12px;">
+      <img src="{{ product.image_url if product.image_url else 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80' }}"
+        alt="{{ product.name }}" style="width:100%; height:160px; object-fit:cover; display:block;" />
+      {% if product.stock == 0 %}
+      <span style="position:absolute; top:8px; right:8px; background:#f87171; color:#fff; font-size:0.65rem; font-weight:700; padding:3px 8px; border-radius:999px;">Out of stock</span>
+      {% elif product.stock <= 5 %}
+      <span style="position:absolute; top:8px; right:8px; background:#fb923c; color:#fff; font-size:0.65rem; font-weight:700; padding:3px 8px; border-radius:999px;">Low stock</span>
+      {% endif %}
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
+      <div style="font-weight:600; font-size:0.9rem; line-height:1.3;">{{ product.name }}</div>
+      <span class="card-badge" style="width:fit-content; font-size:0.7rem; padding:3px 8px;">{{ product.category }}</span>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+      <span style="font-weight:800; font-size:1rem; color:var(--primary);">${{ '%.2f'|format(product.price) }}</span>
+      <a href="{{ url_for('product_page', product_id=product.id) }}" class="btn" style="padding:7px 14px; font-size:0.78rem; border-radius:12px;">View</a>
+    </div>
+  </article>
+  {% endfor %}
+</section>
+
+{% else %}
+<div class="page-card" style="text-align:center; padding:32px 0;">
+  <div style="font-size:3rem; margin-bottom:12px;">👟</div>
+  <p style="font-weight:600; margin:0 0 6px;">No shoes found</p>
+  <p class="tagline" style="margin:0;">Try a different keyword or category.</p>
+</div>
+{% endif %}
+
+{% endblock %}

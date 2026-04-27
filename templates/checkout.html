@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Delivery Details -->
+<div class="page-card">
+  <h2 style="margin:0 0 4px; font-size:1.2rem; font-weight:800;">Delivery Details</h2>
+  <p class="tagline" style="margin:0 0 20px;">Where should we deliver your order?</p>
+
+  <form method="post" id="checkout-form">
+    {{ form.hidden_tag() }}
+
+    <label class="field-label">Street Address</label>
+    {{ form.address(class="text-area", placeholder="Street, building, suite...") }}
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:4px;">
+      <div class="input-group">
+        <label class="field-label">City</label>
+        {{ form.city(class="input-field", placeholder="City") }}
+      </div>
+      <div class="input-group">
+        <label class="field-label">ZIP Code</label>
+        {{ form.zip_code(class="input-field", placeholder="e.g. 10001") }}
+      </div>
+    </div>
+
+    <!-- Payment method (UI only) -->
+    <label class="field-label" style="margin-top:20px;">Payment Method</label>
+    <div style="display:grid; gap:10px; margin-top:10px;">
+      <label style="display:flex; align-items:center; gap:12px; background:#f8fffe; border:1.5px solid #22c55e; border-radius:14px; padding:14px 16px; cursor:pointer;">
+        <input type="radio" name="payment" value="cod" checked style="width:auto; margin:0; accent-color:#22c55e;" />
+        <div>
+          <div style="font-weight:600; font-size:0.9rem;">Cash on Delivery</div>
+          <div style="color:var(--muted); font-size:0.78rem;">Pay when your order arrives</div>
+        </div>
+      </label>
+      <label style="display:flex; align-items:center; gap:12px; background:#fbfcff; border:1.5px solid #e5e7eb; border-radius:14px; padding:14px 16px; cursor:pointer;">
+        <input type="radio" name="payment" value="card" style="width:auto; margin:0; accent-color:#22c55e;" />
+        <div>
+          <div style="font-weight:600; font-size:0.9rem;">Credit / Debit Card</div>
+          <div style="color:var(--muted); font-size:0.78rem;">Visa, Mastercard, etc.</div>
+        </div>
+      </label>
+    </div>
+
+</div>
+
+<!-- Order Summary -->
+<div class="page-card">
+  <h3 style="margin:0 0 14px; font-size:1rem; font-weight:700;">Order Summary</h3>
+
+  <div style="display:grid; gap:8px; margin-bottom:14px;">
+    {% for item in items %}
+    <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem;">
+      <span>{{ item.quantity }}x {{ item.product.name }}</span>
+      <span style="font-weight:600;">PHP {{ '%.2f'|format(item.subtotal()) }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div style="border-top:1px solid #f0f0f0; padding-top:12px; display:grid; gap:8px;">
+    <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+      <span style="color:var(--muted);">Subtotal</span>
+      <span>PHP {{ '%.2f'|format(subtotal) }}</span>
+    </div>
+    <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+      <span style="color:var(--muted);">Delivery</span>
+      <span style="color:#22c55e; font-weight:600;">Free</span>
+    </div>
+    <div style="display:flex; justify-content:space-between; font-size:1rem; font-weight:800; margin-top:4px;">
+      <span>Total</span>
+      <span style="color:#22c55e;">PHP {{ '%.2f'|format(subtotal) }}</span>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    {{ form.submit(class_='btn', style='width:100%; margin-top:8px;') }}
+  </div>
+
+  </form>
+</div>
+
+{% endblock %}

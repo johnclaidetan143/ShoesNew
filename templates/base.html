@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Dream Shoe - Barili | {{ title if title else 'Find Your Perfect Pair' }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<header class="navbar">
+  <a href="{{ url_for('index') }}" class="navbar-logo" style="gap:0;">
+    <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="The Dream Shoe - Barili" class="navbar-logo-img" />
+  </a>
+
+  <nav class="navbar-links">
+    <a href="{{ url_for('index') }}" class="{{ 'navbar-active' if request.endpoint == 'index' }}">Home</a>
+    <a href="{{ url_for('home') }}" class="{{ 'navbar-active' if request.endpoint == 'home' }}">Shop</a>
+    <a href="{{ url_for('prescriptions') }}" class="{{ 'navbar-active' if request.endpoint == 'prescriptions' }}">Size Guide</a>
+    <a href="{{ url_for('consult') }}" class="{{ 'navbar-active' if request.endpoint == 'consult' }}">Style Advice</a>
+    {% if current_user.is_authenticated and current_user.email == 'admin@dreamshoe.com' %}
+    <a href="{{ url_for('admin_dashboard') }}" class="{{ 'navbar-active' if request.endpoint == 'admin_dashboard' }}" style="color:#F97316; font-weight:700;">Admin Panel</a>
+    <a href="{{ url_for('admin_about') }}" class="{{ 'navbar-active' if request.endpoint == 'admin_about' }}" style="color:#F97316; font-weight:700;">Admin About</a>
+    <a href="{{ url_for('admin_product_new') }}" class="{{ 'navbar-active' if request.endpoint in ['admin_add_product', 'admin_product_new'] }}" style="color:#F97316; font-weight:700;">+ Add Product</a>
+    {% endif %}
+  </nav>
+
+  <div class="navbar-right">
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('history') }}" class="navbar-icon" title="My Orders">📦
+        {% set order_count = current_user.orders|length %}
+      </a>
+      <a href="{{ url_for('cart') }}" class="navbar-icon">
+        🛒
+        {% if cart_count > 0 %}
+        <span class="navbar-badge">{{ cart_count }}</span>
+        {% endif %}
+      </a>
+      <a href="{{ url_for('profile') }}" class="navbar-profile">
+        {{ current_user.name.split()[0] }}
+      </a>
+    {% else %}
+      <a href="{{ url_for('cart') }}" class="navbar-icon">🛒</a>
+      <a href="{{ url_for('login') }}" class="btn navbar-signin">Sign In</a>
+    {% endif %}
+  </div>
+
+  <button class="navbar-hamburger" id="hamburger">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<div class="navbar-mobile" id="mobileMenu">
+  <a href="{{ url_for('index') }}">Home</a>
+  <a href="{{ url_for('home') }}">Shop</a>
+  <a href="{{ url_for('prescriptions') }}">Size Guide</a>
+  <a href="{{ url_for('consult') }}">Style Advice</a>
+  {% if current_user.is_authenticated and current_user.email == 'admin@dreamshoe.com' %}
+  <a href="{{ url_for('admin_dashboard') }}">Admin Panel</a>
+  <a href="{{ url_for('admin_about') }}">Admin About</a>
+  <a href="{{ url_for('admin_product_new') }}">+ Add Product</a>
+  {% endif %}
+  {% if current_user.is_authenticated %}
+  <a href="{{ url_for('history') }}">📦 My Orders</a>
+  <a href="{{ url_for('cart') }}">🛒 Cart {% if cart_count > 0 %}({{ cart_count }}){% endif %}</a>
+  <a href="{{ url_for('profile') }}">👤 Profile</a>
+  {% else %}
+  <a href="{{ url_for('login') }}">Sign In</a>
+  <a href="{{ url_for('register') }}">Register</a>
+  {% endif %}
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="container" style="padding-top:12px; padding-bottom:0;">
+  {% for category, message in messages %}
+  <div class="flash {{ category }}">{{ message }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+<div class="container">
+  {% block content %}{% endblock %}
+</div>
+
+<footer style="background: linear-gradient(135deg, #0F172A 0%, #1E1B4B 50%, #0F172A 100%); margin-top:32px; padding:24px 0 0;"><div style="max-width:1200px; margin:0 auto; padding:0 24px;">
+    <div style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:24px; padding-bottom:20px;">
+
+      <!-- Brand -->
+      <div style="text-align:center;">
+        <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="The Dream Shoe" style="height:72px; width:72px; margin-bottom:8px; border-radius:50%; object-fit:cover;" />
+        <p style="color:#A5B4FC; font-size:0.75rem; line-height:1.5; margin:0; max-width:220px;">Barili's premier destination for authentic sports and lifestyle footwear.</p>
+      </div>
+
+      <!-- Shop -->
+      <div>
+        <div style="color:#818CF8; font-weight:700; font-size:0.72rem; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.1em;">Shop</div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          {% for cat, icon in [('Running','🏃'),('Basketball','🏀'),('Training','🏋️'),('Football','⚽'),('Lifestyle','✨')] %}
+          <a href="{{ url_for('home', category=cat) }}" style="color:#A5B4FC; font-size:0.78rem; display:flex; align-items:center; gap:6px;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#A5B4FC'">{{ icon }} {{ cat }}</a>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Help -->
+      <div>
+        <div style="color:#818CF8; font-weight:700; font-size:0.72rem; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.1em;">Help</div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <a href="{{ url_for('prescriptions') }}" style="color:#A5B4FC; font-size:0.78rem;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#A5B4FC'">Size Guide</a>
+          <a href="{{ url_for('consult') }}" style="color:#A5B4FC; font-size:0.78rem;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#A5B4FC'">Style Advice</a>
+          <a href="{{ url_for('about') }}" style="color:#A5B4FC; font-size:0.78rem;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#A5B4FC'">About Us</a>
+          <a href="{{ url_for('privacy') }}" style="color:#A5B4FC; font-size:0.78rem;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#A5B4FC'">Privacy</a>
+          <a href="{{ url_for('community_rules') }}" style="color:#A5B4FC; font-size:0.78rem;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#A5B4FC'">Terms</a>
+        </div>
+      </div>
+
+      <!-- Account -->
+      <div>
+        <div style="color:#818CF8; font-weight:700; font-size:0.72rem; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.1em;">Account</div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          {% if current_user.is_authenticated %}
+          <a href="{{ url_for('profile') }}" style="color:#A5B4FC; font-size:0.78rem;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#A5B4FC'">👤 Profile</a>
+          <a href="{{ url_for('history') }}" style="color:#A5B4FC; font-size:0.78rem;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#A5B4FC'">📦 Orders</a>
+          <a href="{{ url_for('cart') }}" style="color:#A5B4FC; font-size:0.78rem;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#A5B4FC'">🛒 Cart</a>
+          <a href="{{ url_for('logout') }}" style="color:#F87171; font-size:0.78rem;">🚪 Sign Out</a>
+          {% else %}
+          <a href="{{ url_for('login') }}" style="color:#A5B4FC; font-size:0.78rem;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#A5B4FC'">🔑 Sign In</a>
+          <a href="{{ url_for('register') }}" style="color:#A5B4FC; font-size:0.78rem;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#A5B4FC'">✍️ Register</a>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom bar -->
+    <div style="border-top:1px solid #312E81; padding:12px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <p style="margin:0; color:#6366F1; font-size:0.72rem;">© {{ current_year }} <span style="color:#818CF8; font-weight:700;">The Dream Shoe - Barili</span>. All rights reserved.</p>
+      <div style="display:flex; gap:6px;">
+        {% for cat in ['🏀','🏃','⚽','🏋️','✨'] %}
+        <span style="width:24px; height:24px; background:#312E81; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">{{ cat }}</span>
+        {% endfor %}
+      </div>
+    </div>
+  </div></footer>
+
+<script>
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.getElementById('mobileMenu');
+  hamburger.addEventListener('click', () => {
+    mobileMenu.classList.toggle('open');
+    hamburger.classList.toggle('active');
+  });
+</script>
+
+</body>
+</html>

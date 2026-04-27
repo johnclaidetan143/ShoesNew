@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Hero -->
+<div style="background:var(--primary); border-radius:24px; padding:48px 40px; display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center; margin-bottom:32px;">
+  <div>
+    <span style="background:rgba(255,255,255,0.15); color:#fff; font-size:0.75rem; font-weight:700; padding:4px 14px; border-radius:999px; display:inline-block; margin-bottom:16px;">👟 Free Style Consultation</span>
+    <h1 style="margin:0 0 14px; font-size:2rem; font-weight:900; color:#fff; line-height:1.2;">Find your perfect style at The Dream Shoe</h1>
+    <p style="margin:0 0 24px; color:rgba(255,255,255,0.88); font-size:0.95rem; line-height:1.7;">Not sure which shoe fits your lifestyle? Browse our style guide and discover the perfect pair for every occasion — from Barili's courts to its coastlines.</p>
+    <a href="#book" style="background:#fff; color:var(--primary); font-weight:700; padding:12px 28px; border-radius:999px; font-size:0.9rem; text-decoration:none; box-shadow:0 4px 14px rgba(0,0,0,0.15);">💬 Get Advice</a>
+  </div>
+  <div style="text-align:center;">
+    <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?w=500&q=80"
+      alt="Shoe styling" style="width:100%; max-width:340px; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.2);" />
+  </div>
+</div>
+
+<!-- Style tips -->
+<h2 style="margin:0 0 20px; font-size:1.2rem; font-weight:800;">Style tips by occasion</h2>
+<div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; margin-bottom:32px;">
+  {% for tip in [
+    ('👔','Lifestyle','The Dream Shoe - Barili features the Adidas Stan Smith and Nike Air Max 270 — clean, polished leather sneakers that pair perfectly with office and formal wear. Classic styles that keep you looking sharp all day.','Lifestyle'),
+    ('🏃','Running','Power your workouts with our Nike Air Zoom Pegasus 40, ASICS Gel-Nimbus 25, Brooks Glycerin 21, Reebok Nano X4, and Under Armour TriBase Reign 6. Built for speed, endurance, and heavy lifting.','Running'),
+    ('🎉','Lifestyle','The Dream Shoe offers the Puma RS-X, New Balance 574, and Adidas Stan Smith — iconic lifestyle sneakers perfect for weekend hangouts, casual strolls, and everyday comfort around Barili.','Lifestyle'),
+    ('🏖️','Training','Our lightweight Puma Fuse 2.0 and New Balance Fresh Foam 1080 are breathable and flexible — ideal for warm Cebu weather, beach trips, and outdoor activities around the south.','Training'),
+    ('🍂','Football','Stay ready for any terrain with our Adidas Predator Accuracy, Puma Future 7 Pro, and Adidas Copa Mundial — durable, high-grip footwear built for rugged conditions and all-weather performance.','Football'),
+  ] %}
+  <div class="page-card" style="padding:24px 20px;">
+    <div style="font-size:2rem; margin-bottom:12px;">{{ tip[0] }}</div>
+    <div style="font-weight:700; font-size:0.95rem; margin-bottom:8px;">{{ tip[1] }}</div>
+    <div style="color:var(--muted); font-size:0.82rem; line-height:1.5; margin-bottom:14px;">{{ tip[2] }}</div>
+    <a href="{{ url_for('home', category=tip[3]) }}" class="btn" style="display:block; text-align:center; border-radius:999px; padding:9px; font-size:0.82rem;">Shop {{ tip[1] }}</a>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Ask form -->
+<div id="book" class="page-card" style="margin-bottom:32px;">
+  <h3 style="margin:0 0 6px; font-size:1.1rem; font-weight:800;">💬 Ask a Style Expert</h3>
+  <p style="margin:0 0 20px; color:var(--muted); font-size:0.85rem;">Free for all DreamShoe customers. We'll reply within 24 hours.</p>
+  <form>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+      <div>
+        <label class="field-label">Your Name</label>
+        <input class="input-field" type="text" placeholder="Full name" />
+      </div>
+      <div>
+        <label class="field-label">Occasion</label>
+        <select class="input-field" style="margin-top:8px;">
+          <option>Casual everyday wear</option>
+          <option>Office / formal</option>
+          <option>Sports & gym</option>
+          <option>Special occasion</option>
+          <option>Outdoor / hiking</option>
+          <option>Beach / summer</option>
+        </select>
+      </div>
+    </div>
+    <label class="field-label">Your question</label>
+    <textarea class="text-area" placeholder="Describe your style, budget, or what you're looking for..." style="min-height:140px;"></textarea>
+    <div class="form-actions">
+      <a href="{{ url_for('login') }}" class="btn" style="display:block; text-align:center; border-radius:999px; padding:14px; font-size:1rem;">Send Message</a>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

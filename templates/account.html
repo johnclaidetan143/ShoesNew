@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-card">
+  <h2>Account & Management</h2>
+  <div class="setting-card">
+    <a class="btn secondary" href="{{ url_for('profile') }}">Profile</a>
+    <a class="btn secondary" href="{{ url_for('privacy') }}">Privacy Setting</a>
+    <a class="btn secondary" href="{{ url_for('community_rules') }}">Community Rules</a>
+    <a class="btn secondary" href="{{ url_for('about') }}">About</a>
+  </div>
+</div>
+{% endblock %}

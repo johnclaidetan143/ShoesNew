@@ -1,0 +1,61 @@
+{% extends 'admin/base.html' %}
+{% block page_title %}Users{% endblock %}
+{% block content %}
+
+<div class="table-card">
+  <div class="table-head">
+    <h3>👥 All Users ({{ users|length }})</h3>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Role</th>
+        <th>Joined</th>
+        <th>Orders</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+      <tr>
+        <td>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:34px; height:34px; border-radius:50%; background:{% if user.role == 'admin' %}#F59E0B{% else %}#111827{% endif %}; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">
+              {{ user.name[0].upper() }}
+            </div>
+            <strong>{{ user.name }}</strong>
+          </div>
+        </td>
+        <td style="color:#6B7280;">{{ user.email }}</td>
+        <td style="color:#6B7280;">{{ user.phone or '—' }}</td>
+        <td>
+          {% if user.role == 'admin' %}
+          <span class="badge badge-yellow">Admin</span>
+          {% else %}
+          <span class="badge badge-gray">Customer</span>
+          {% endif %}
+        </td>
+        <td style="color:#6B7280; font-size:0.8rem;">{{ user.created_at.strftime('%b %d, %Y') }}</td>
+        <td><span class="badge badge-blue">{{ user.orders|length }}</span></td>
+        <td>
+          {% if user.id != current_user.id %}
+          <form method="post" action="{{ url_for('admin_user_delete', user_id=user.id) }}" onsubmit="return confirm('Delete {{ user.name }}?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn-danger">🗑️ Delete</button>
+          </form>
+          {% else %}
+          <span style="font-size:0.78rem; color:#6B7280;">You</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" style="text-align:center; color:#6B7280; padding:32px;">No users yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

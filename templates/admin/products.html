@@ -1,0 +1,59 @@
+{% extends 'admin/base.html' %}
+{% block page_title %}Products{% endblock %}
+{% block content %}
+
+<div class="table-card">
+  <div class="table-head">
+    <h3>👟 All Products ({{ products|length }})</h3>
+    <a href="{{ url_for('admin_product_new') }}" class="btn-accent">+ Add Product</a>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Image</th>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Price</th>
+        <th>Stock</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in products %}
+      <tr>
+        <td>
+          <div style="width:48px; height:48px; border-radius:10px; background:#F3F4F6; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+            {% if p.image_url %}
+            <img src="{{ p.image_url }}" alt="{{ p.name }}" style="width:100%; height:100%; object-fit:cover;" />
+            {% else %}
+            <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="The Dream Shoe - Barili Logo" style="width:100%; height:100%; object-fit:cover;" />
+            {% endif %}
+          </div>
+        </td>
+        <td><strong>{{ p.name }}</strong></td>
+        <td><span class="badge badge-gray">{{ p.category }}</span></td>
+        <td>₱{{ '%.2f'|format(p.price) }}</td>
+        <td>
+          {% if p.stock == 0 %}<span class="badge badge-red">Out of Stock</span>
+          {% elif p.stock <= 5 %}<span class="badge badge-yellow">{{ p.stock }} left</span>
+          {% else %}<span class="badge badge-green">{{ p.stock }}</span>{% endif %}
+        </td>
+        <td>
+          <div style="display:flex; gap:8px;">
+            <a href="{{ url_for('admin_product_edit', product_id=p.id) }}" class="btn-edit">✏️ Edit</a>
+            <form method="post" action="{{ url_for('admin_product_delete', product_id=p.id) }}" onsubmit="return confirm('Delete {{ p.name }}?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn-danger">🗑️ Delete</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" style="text-align:center; color:#6B7280; padding:32px;">No products yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
+

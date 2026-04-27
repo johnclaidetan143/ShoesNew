@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% set cat_images = {
+  'Running':    'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1200&q=80',
+  'Basketball': '/static/images/Gt Cut.png',
+  'Training':   'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=1200&q=80',
+  'Football':   'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=1200&q=80',
+  'Lifestyle':  'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1200&q=80',
+} %}
+
+{% set cat_desc = {
+  'Running':    'High-performance running shoes engineered for speed, endurance and comfort on every stride.',
+  'Basketball': 'Court-ready basketball shoes with ankle support, cushioning and traction for elite play.',
+  'Training':   'Versatile training shoes built for the gym, HIIT, lifting and cross-training workouts.',
+  'Football':   'Precision football boots designed for speed, control and traction on grass and turf.',
+  'Lifestyle':  'Iconic sports-inspired sneakers for everyday style and all-day comfort.',
+} %}
+
+<!-- Category hero banner -->
+<div style="position:relative; border-radius:24px; overflow:hidden; height:220px; margin-bottom:32px;">
+  <img src="{{ cat_images.get(category, cat_images['Medicine']) }}"
+    style="width:100%; height:100%; object-fit:cover; display:block;" />
+  <div style="position:absolute; inset:0; background:linear-gradient(to right, rgba(0,0,0,0.65), rgba(0,0,0,0.1));"></div>
+  <div style="position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; padding:32px 40px;">
+    <div style="display:flex; gap:8px; margin-bottom:10px;">
+      {% for cat in categories %}
+      <a href="{{ url_for('category_page', category=cat) }}"
+        style="padding:5px 14px; border-radius:999px; font-size:0.78rem; font-weight:600; text-decoration:none;
+               background:{{ 'rgba(255,255,255,0.95)' if cat == category else 'rgba(255,255,255,0.15)' }};
+               color:{{ '#16a34a' if cat == category else '#fff' }};
+               border:1px solid {{ 'transparent' if cat == category else 'rgba(255,255,255,0.3)' }};">
+        {{ cat }}
+      </a>
+      {% endfor %}
+    </div>
+    <h1 style="margin:0 0 8px; font-size:2rem; font-weight:900; color:#fff;">{{ category }}</h1>
+    <p style="margin:0; color:rgba(255,255,255,0.85); font-size:0.9rem; max-width:480px;">
+      {{ cat_desc.get(category, '') }}
+    </p>
+  </div>
+</div>
+
+<!-- Results heading -->
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+  <div>
+    <span style="font-weight:800; font-size:1.05rem;">{{ products|length }} product{{ 's' if products|length != 1 }}</span>
+    <span style="color:var(--muted); font-size:0.82rem; margin-left:6px;">in {{ category }}</span>
+  </div>
+  <a href="{{ url_for('home') }}" style="color:#22c55e; font-size:0.85rem; font-weight:600;">← Back to Shop</a>
+</div>
+
+<!-- Product grid -->
+{% if products %}
+<section class="product-grid" style="margin-bottom:40px;">
+  {% for product in products %}
+  <article class="product-card" style="display:flex; flex-direction:column; gap:8px; overflow:hidden;">
+
+    <div style="position:relative; margin:-16px -16px 12px; cursor:zoom-in;"
+      onclick="openZoom('{{ product.image_url if product.image_url else cat_images.get(product.category, '') }}', '{{ product.name }}')">
+      <img
+        src="{{ product.image_url if product.image_url else cat_images.get(product.category, 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&q=80') }}"
+        alt="{{ product.name }}"
+        style="width:100%; height:160px; object-fit:cover; display:block; transition:transform 0.3s;"
+        onmouseover="this.style.transform='scale(1.05)'"
+        onmouseout="this.style.transform='scale(1)'" />
+      {% if product.stock == 0 %}
+      <span style="position:absolute; top:8px; right:8px; background:#f87171; color:#fff; font-size:0.65rem; font-weight:700; padding:3px 8px; border-radius:999px;">Out of stock</span>
+      {% elif product.stock <= 5 %}
+      <span style="position:absolute; top:8px; right:8px; background:#fb923c; color:#fff; font-size:0.65rem; font-weight:700; padding:3px 8px; border-radius:999px;">Low stock</span>
+      {% endif %}
+      <span style="position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,0.45); color:#fff; border-radius:6px; padding:3px 7px; font-size:0.65rem;">🔍 Zoom</span>
+    </div>
+
+    <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
+      <div style="font-weight:600; font-size:0.9rem; line-height:1.3;">{{ product.name }}</div>
+      <span class="card-badge" style="width:fit-content; font-size:0.7rem; padding:3px 8px;">{{ product.category }}</span>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+      <span style="font-weight:800; font-size:1rem; color:#22c55e;">${{ '%.2f'|format(product.price) }}</span>
+      <a href="{{ url_for('product_page', product_id=product.id) }}"
+        class="btn" style="padding:7px 16px; font-size:0.8rem; border-radius:12px;">View</a>
+    </div>
+
+  </article>
+  {% endfor %}
+</section>
+
+{% else %}
+<div class="page-card" style="text-align:center; padding:48px 0;">
+  <div style="font-size:3rem; margin-bottom:12px;">💊</div>
+  <p style="font-weight:600; margin:0 0 6px;">No products in this category yet</p>
+  <a href="{{ url_for('home') }}" class="btn" style="border-radius:999px; padding:10px 24px; margin-top:12px; display:inline-block;">Browse All</a>
+</div>
+{% endif %}
+
+<!-- Zoom lightbox -->
+<div id="zoomOverlay" onclick="closeZoom()"
+  style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9999; align-items:center; justify-content:center; cursor:zoom-out;">
+  <img id="zoomImg" src="" alt=""
+    style="max-width:90vw; max-height:90vh; border-radius:16px; box-shadow:0 24px 80px rgba(0,0,0,0.5); object-fit:contain;" />
+  <div id="zoomCaption" style="position:absolute; bottom:24px; left:50%; transform:translateX(-50%); color:#fff; font-weight:600; font-size:0.95rem; background:rgba(0,0,0,0.4); padding:8px 20px; border-radius:999px; white-space:nowrap;"></div>
+  <button onclick="closeZoom()" style="position:absolute; top:20px; right:24px; background:rgba(255,255,255,0.15); border:none; color:#fff; font-size:1.4rem; width:44px; height:44px; border-radius:50%; cursor:pointer;">✕</button>
+</div>
+
+<script>
+  function openZoom(src, name) {
+    document.getElementById('zoomImg').src = src;
+    document.getElementById('zoomCaption').textContent = name;
+    document.getElementById('zoomOverlay').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeZoom() {
+    document.getElementById('zoomOverlay').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeZoom(); });
+</script>
+
+{% endblock %}

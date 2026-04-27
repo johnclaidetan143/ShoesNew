@@ -1,0 +1,58 @@
+{% extends 'admin/base.html' %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block content %}
+
+<div style="margin-bottom:20px;">
+  <a href="{{ url_for('admin_products') }}" style="color:#6B7280; font-size:0.85rem;">← Back to Products</a>
+</div>
+
+<div class="form-card">
+  <h3 style="margin:0 0 24px; font-size:1.1rem; font-weight:800;">{{ title }}</h3>
+  <form method="post">
+    {{ form.hidden_tag() }}
+
+    <div class="form-group">
+      {{ form.name.label(class="form-label") }}
+      {{ form.name(class="form-input", placeholder="e.g. Nike Air Max 270") }}
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+      <div class="form-group">
+        {{ form.category.label(class="form-label") }}
+        {{ form.category(class="form-input") }}
+      </div>
+      <div class="form-group">
+        {{ form.price.label(class="form-label") }}
+        {{ form.price(class="form-input", placeholder="e.g. 129.99") }}
+      </div>
+    </div>
+
+    <div class="form-group">
+      {{ form.stock.label(class="form-label") }}
+      {{ form.stock(class="form-input", placeholder="e.g. 50") }}
+    </div>
+
+    <div class="form-group">
+      {{ form.description.label(class="form-label") }}
+      {{ form.description(class="form-input", rows=3, style="min-height:80px; resize:vertical;") }}
+    </div>
+
+    <div class="form-group">
+      {{ form.image_url.label(class="form-label") }}
+      {{ form.image_url(class="form-input", placeholder="/static/images/shoe.png or https://...") }}
+      {% if product and product.image_url %}
+      <div style="margin-top:10px; display:flex; align-items:center; gap:10px;">
+        <img src="{{ product.image_url }}" style="width:60px; height:60px; object-fit:cover; border-radius:10px; border:1px solid #E5E7EB;" />
+        <span style="font-size:0.78rem; color:#6B7280;">Current image</span>
+      </div>
+      {% endif %}
+    </div>
+
+    <div style="display:flex; gap:12px; margin-top:8px;">
+      {{ form.submit(class_="btn-accent", style="padding:12px 28px; border-radius:10px; font-size:0.9rem;") }}
+      <a href="{{ url_for('admin_products') }}" class="btn-edit" style="padding:12px 20px; border-radius:10px; font-size:0.9rem;">Cancel</a>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

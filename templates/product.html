@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% set fallback = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80' %}
+{% set img = product.image_url if product.image_url else fallback %}
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:32px; align-items:start;">
+
+  <!-- Image with zoom -->
+  <div>
+    <div style="position:relative; border-radius:20px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.1); cursor:zoom-in;" onclick="openZoom()">
+      <img id="mainImg" src="{{ img }}" alt="{{ product.name }}"
+        style="width:100%; height:420px; object-fit:cover; display:block; transition:transform 0.3s;"
+        onmouseover="this.style.transform='scale(1.04)'"
+        onmouseout="this.style.transform='scale(1)'" />
+      <div style="position:absolute; bottom:12px; right:12px; background:rgba(0,0,0,0.45); color:#fff; border-radius:8px; padding:6px 10px; font-size:0.75rem; display:flex; align-items:center; gap:5px;">
+        <span>🔍</span> Click to zoom
+      </div>
+    </div>
+  </div>
+
+  <!-- Product details -->
+  <div class="page-card" style="position:sticky; top:80px;">
+
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+      <span class="card-badge">{{ product.category }}</span>
+      <span style="font-size:0.8rem; color:var(--accent); font-weight:600;">★ 4.8</span>
+      {% if product.stock == 0 %}
+      <span style="background:#fee2e2; color:#dc2626; font-size:0.72rem; font-weight:700; padding:3px 10px; border-radius:999px;">Out of stock</span>
+      {% elif product.stock <= 5 %}
+      <span style="background:#ffedd5; color:#ea580c; font-size:0.72rem; font-weight:700; padding:3px 10px; border-radius:999px;">Only {{ product.stock }} left</span>
+      {% else %}
+      <span style="background:#D1FAE5; color:#065F46; font-size:0.72rem; font-weight:700; padding:3px 10px; border-radius:999px;">In stock</span>
+      {% endif %}
+    </div>
+
+    <h1 style="margin:0 0 8px; font-size:1.5rem; font-weight:900; line-height:1.2;">{{ product.name }}</h1>
+    <p style="margin:0 0 20px; color:var(--muted); font-size:0.9rem; line-height:1.6;">{{ product.description }}</p>
+
+    <div style="font-size:2rem; font-weight:900; color:var(--primary); margin-bottom:24px;">
+      ₱{{ '%.2f'|format(product.price) }}
+    </div>
+
+    {% if current_user.is_authenticated %}
+    <!-- Logged in: show Add to Cart form -->
+    <form method="post">
+      {{ form.hidden_tag() }}
+      <label class="field-label">Quantity</label>
+      <div style="display:flex; align-items:center; gap:12px; margin-top:8px; margin-bottom:20px;">
+        <button type="button" onclick="changeQty(-1)"
+          style="width:38px; height:38px; border-radius:50%; border:1.5px solid #E5E7EB; background:#fff; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:700;">−</button>
+        {{ form.quantity(class="", id="qtyInput", style="width:60px; text-align:center; border:1.5px solid #E5E7EB; border-radius:12px; padding:8px; font-size:1rem; font-weight:700;") }}
+        <button type="button" onclick="changeQty(1)"
+          style="width:38px; height:38px; border-radius:50%; border:1.5px solid #E5E7EB; background:#fff; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:700;">+</button>
+        <span style="color:var(--muted); font-size:0.82rem;">{{ product.stock }} available</span>
+      </div>
+      <button type="submit"
+        style="width:100%; background:var(--primary); color:#fff; border:none; border-radius:999px; padding:16px; font-size:1rem; font-weight:700; cursor:pointer; box-shadow:0 4px 16px rgba(0,0,0,0.15); transition:transform 0.2s;"
+        onmouseover="this.style.transform='translateY(-2px)'"
+        onmouseout="this.style.transform='translateY(0)'">
+        🛒 Add to Cart
+      </button>
+    </form>
+
+    {% else %}
+    <!-- Guest: show quantity selector + login prompt on click -->
+    <label class="field-label">Quantity</label>
+    <div style="display:flex; align-items:center; gap:12px; margin-top:8px; margin-bottom:20px;">
+      <button type="button" onclick="guestChangeQty(-1)"
+        style="width:38px; height:38px; border-radius:50%; border:1.5px solid #E5E7EB; background:#fff; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:700;">−</button>
+      <input id="guestQty" type="number" value="1" min="1" max="{{ product.stock }}"
+        style="width:60px; text-align:center; border:1.5px solid #E5E7EB; border-radius:12px; padding:8px; font-size:1rem; font-weight:700;" />
+      <button type="button" onclick="guestChangeQty(1)"
+        style="width:38px; height:38px; border-radius:50%; border:1.5px solid #E5E7EB; background:#fff; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:700;">+</button>
+      <span style="color:var(--muted); font-size:0.82rem;">{{ product.stock }} available</span>
+    </div>
+
+    <button onclick="document.getElementById('loginPrompt').style.display='flex'"
+      style="width:100%; background:var(--primary); color:#fff; border:none; border-radius:999px; padding:16px; font-size:1rem; font-weight:700; cursor:pointer; box-shadow:0 4px 16px rgba(0,0,0,0.15); transition:transform 0.2s;"
+      onmouseover="this.style.transform='translateY(-2px)'"
+      onmouseout="this.style.transform='translateY(0)'">
+      🛒 Add to Cart
+    </button>
+
+    <p style="text-align:center; margin-top:12px; font-size:0.82rem; color:var(--muted);">
+      <a href="{{ url_for('login', next=request.url) }}" style="color:var(--primary); font-weight:600;">Sign in</a> or
+      <a href="{{ url_for('register', next=request.url) }}" style="color:var(--primary); font-weight:600;">create an account</a> to purchase
+    </p>
+    {% endif %}
+
+    <div style="display:flex; gap:16px; margin-top:16px; padding-top:16px; border-top:1px solid #F3F4F6;">
+      <div style="display:flex; align-items:center; gap:6px; font-size:0.8rem; color:var(--muted);"><span>🚚</span> Free shipping $80+</div>
+      <div style="display:flex; align-items:center; gap:6px; font-size:0.8rem; color:var(--muted);"><span>✅</span> 100% authentic</div>
+      <div style="display:flex; align-items:center; gap:6px; font-size:0.8rem; color:var(--muted);"><span>↩️</span> Easy returns</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- LOGIN PROMPT MODAL (guest) -->
+{% if not current_user.is_authenticated %}
+<div id="loginPrompt"
+  style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:24px; padding:36px 32px; max-width:400px; width:90%; text-align:center; box-shadow:0 24px 80px rgba(0,0,0,0.2);">
+    <div style="font-size:3rem; margin-bottom:12px;">🛒</div>
+    <h3 style="margin:0 0 8px; font-size:1.2rem; font-weight:900;">Sign in to add to cart</h3>
+    <p style="margin:0 0 24px; color:var(--muted); font-size:0.9rem; line-height:1.6;">
+      Create a free account or sign in to purchase <strong>{{ product.name }}</strong>.
+    </p>
+    <div style="display:grid; gap:10px;">
+      <a href="{{ url_for('login', next=request.url) }}"
+        style="display:block; background:var(--primary); color:#fff; font-weight:700; padding:13px; border-radius:999px; text-decoration:none; font-size:0.95rem;">
+        Sign In
+      </a>
+      <a href="{{ url_for('register', next=request.url) }}"
+        style="display:block; background:#F3F4F6; color:var(--primary); font-weight:700; padding:13px; border-radius:999px; text-decoration:none; font-size:0.95rem;">
+        Create Account
+      </a>
+      <button onclick="document.getElementById('loginPrompt').style.display='none'"
+        style="background:none; border:none; color:var(--muted); font-size:0.85rem; cursor:pointer; padding:8px;">
+        Continue browsing
+      </button>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- ZOOM LIGHTBOX -->
+<div id="zoomOverlay" onclick="closeZoom()"
+  style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:999; align-items:center; justify-content:center; cursor:zoom-out;">
+  <img src="{{ img }}" alt="{{ product.name }}"
+    style="max-width:90vw; max-height:90vh; border-radius:16px; box-shadow:0 24px 80px rgba(0,0,0,0.5); object-fit:contain;" />
+  <button onclick="closeZoom()"
+    style="position:absolute; top:20px; right:24px; background:rgba(255,255,255,0.15); border:none; color:#fff; font-size:1.5rem; width:44px; height:44px; border-radius:50%; cursor:pointer;">✕</button>
+</div>
+
+<script>
+  function openZoom() {
+    document.getElementById('zoomOverlay').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeZoom() {
+    document.getElementById('zoomOverlay').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  function changeQty(delta) {
+    const input = document.getElementById('qtyInput');
+    const max = {{ product.stock }};
+    let val = parseInt(input.value) + delta;
+    if (val < 1) val = 1;
+    if (val > max) val = max;
+    input.value = val;
+  }
+  function guestChangeQty(delta) {
+    const input = document.getElementById('guestQty');
+    const max = {{ product.stock }};
+    let val = parseInt(input.value) + delta;
+    if (val < 1) val = 1;
+    if (val > max) val = max;
+    input.value = val;
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeZoom(); document.getElementById('loginPrompt') && (document.getElementById('loginPrompt').style.display='none'); }});
+</script>
+
+{% endblock %}

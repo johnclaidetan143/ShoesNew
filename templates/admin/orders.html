@@ -1,0 +1,61 @@
+{% extends 'admin/base.html' %}
+{% block page_title %}Orders{% endblock %}
+{% block content %}
+
+<div class="table-card">
+  <div class="table-head">
+    <h3>📦 All Orders ({{ orders|length }})</h3>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Order ID</th>
+        <th>Customer</th>
+        <th>Items</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th>Date</th>
+        <th>Update Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td><strong>#{{ order.id }}</strong></td>
+        <td>
+          <div style="font-weight:600;">{{ order.user.name }}</div>
+          <div style="font-size:0.75rem; color:#6B7280;">{{ order.user.email }}</div>
+        </td>
+        <td>
+          {% for item in order.items %}
+          <div style="font-size:0.78rem; color:#6B7280;">{{ item.quantity }}× {{ item.product.name }}</div>
+          {% endfor %}
+        </td>
+        <td><strong>₱{{ '%.2f'|format(order.total) }}</strong></td>
+        <td>
+          {% if order.status == 'Pending' %}<span class="badge badge-yellow">{{ order.status }}</span>
+          {% elif order.status == 'Completed' %}<span class="badge badge-green">{{ order.status }}</span>
+          {% elif order.status == 'Processing' %}<span class="badge badge-blue">{{ order.status }}</span>
+          {% else %}<span class="badge badge-red">{{ order.status }}</span>{% endif %}
+        </td>
+        <td style="color:#6B7280; font-size:0.8rem;">{{ order.created_at.strftime('%b %d, %Y') }}</td>
+        <td>
+          <form method="post" action="{{ url_for('admin_order_status', order_id=order.id) }}" style="display:flex; gap:6px; align-items:center;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <select name="status" class="form-input" style="padding:6px 10px; font-size:0.78rem; width:130px;">
+              {% for s in ['Pending','Processing','Completed','Cancelled'] %}
+              <option value="{{ s }}" {{ 'selected' if order.status == s }}>{{ s }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn-primary" style="padding:6px 12px; font-size:0.78rem;">Save</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" style="text-align:center; color:#6B7280; padding:32px;">No orders yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

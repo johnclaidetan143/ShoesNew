@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-card">
+  <h2 style="font-size:1.2rem; font-weight:800; margin-bottom:4px;">🔔 Notifications</h2>
+  <p class="tagline" style="margin-bottom:20px;">Stay updated with your Dream Shoe orders and announcements.</p>
+
+  <form method="post">
+    {{ form.hidden_tag() }}
+    <div style="display:grid; gap:10px; margin-bottom:16px;">
+      <label style="display:flex; align-items:center; gap:10px; background:#F9FAFB; border-radius:12px; padding:12px 16px; cursor:pointer; border:1.5px solid #E5E7EB;">
+        {{ form.notify_push() }} <span style="font-size:0.9rem; font-weight:600;">🔔 Push Notifications</span>
+      </label>
+      <label style="display:flex; align-items:center; gap:10px; background:#F9FAFB; border-radius:12px; padding:12px 16px; cursor:pointer; border:1.5px solid #E5E7EB;">
+        {{ form.notify_in_app() }} <span style="font-size:0.9rem; font-weight:600;">📱 In-App Notifications</span>
+      </label>
+      <label style="display:flex; align-items:center; gap:10px; background:#F9FAFB; border-radius:12px; padding:12px 16px; cursor:pointer; border:1.5px solid #E5E7EB;">
+        {{ form.notify_email() }} <span style="font-size:0.9rem; font-weight:600;">📧 Email Notifications</span>
+      </label>
+    </div>
+    <div class="form-actions">
+      {{ form.submit(class_='btn', style='border-radius:999px; padding:10px 24px;') }}
+    </div>
+  </form>
+</div>
+
+<!-- Alerts -->
+<div class="page-card">
+  <h3 style="font-size:1rem; font-weight:800; margin-bottom:16px;">📋 Recent Alerts</h3>
+  {% if alerts %}
+    {% for alert in alerts %}
+    <div class="notification-item" style="margin-bottom:10px;">
+      <p style="margin:0 0 4px; font-size:0.9rem; font-weight:500;">{{ alert.message }}</p>
+      <small style="color:var(--muted); font-size:0.75rem;">🕐 {{ alert.created_at.strftime('%b %d, %Y %I:%M %p') }}</small>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div style="text-align:center; padding:24px 0;">
+      <div style="font-size:2.5rem; margin-bottom:10px;">🔔</div>
+      <p style="font-weight:600; margin:0 0 4px;">No notifications yet</p>
+      <p class="tagline" style="font-size:0.85rem;">You'll receive updates here after placing orders at The Dream Shoe - Barili.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

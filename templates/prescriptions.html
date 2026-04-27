@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Hero -->
+<div style="background:var(--primary); border-radius:24px; padding:48px 40px; display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center; margin-bottom:32px;">
+  <div>
+    <span style="background:rgba(255,255,255,0.15); color:#fff; font-size:0.75rem; font-weight:700; padding:4px 14px; border-radius:999px; display:inline-block; margin-bottom:16px;">📏 Find Your Perfect Fit</span>
+    <h1 style="margin:0 0 14px; font-size:2rem; font-weight:900; color:#fff; line-height:1.2;">Shoe Size Guide</h1>
+    <p style="margin:0 0 24px; color:rgba(255,255,255,0.88); font-size:0.95rem; line-height:1.7;">Not sure about your size? Use our guide to find the perfect fit. We carry sizes for men, women, and kids.</p>
+    <a href="{{ url_for('home') }}" style="background:#fff; color:var(--primary); font-weight:700; padding:12px 28px; border-radius:999px; font-size:0.9rem; text-decoration:none; box-shadow:0 4px 14px rgba(0,0,0,0.15);">Shop Now</a>
+  </div>
+  <div style="text-align:center;">
+    <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&q=80"
+      alt="Shoes" style="width:100%; max-width:340px; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.2);" />
+  </div>
+</div>
+
+<!-- Size charts -->
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:32px;">
+
+  <!-- Men's -->
+  <div class="page-card">
+    <h3 style="margin:0 0 16px; font-size:1rem; font-weight:800;">👟 Men's Size Chart</h3>
+    <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+      <thead>
+        <tr style="background:#F3F4F6;">
+          <th style="padding:10px 12px; text-align:left; border-radius:8px 0 0 8px;">US</th>
+          <th style="padding:10px 12px; text-align:left;">UK</th>
+          <th style="padding:10px 12px; text-align:left;">EU</th>
+          <th style="padding:10px 12px; text-align:left; border-radius:0 8px 8px 0;">CM</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in [('7','6','40','25'),('8','7','41','26'),('9','8','42','27'),('10','9','43','28'),('11','10','44','29'),('12','11','45','30')] %}
+        <tr style="border-bottom:1px solid #F3F4F6;">
+          <td style="padding:10px 12px; font-weight:600;">{{ row[0] }}</td>
+          <td style="padding:10px 12px; color:var(--muted);">{{ row[1] }}</td>
+          <td style="padding:10px 12px; color:var(--muted);">{{ row[2] }}</td>
+          <td style="padding:10px 12px; color:var(--muted);">{{ row[3] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Women's -->
+  <div class="page-card">
+    <h3 style="margin:0 0 16px; font-size:1rem; font-weight:800;">👠 Women's Size Chart</h3>
+    <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+      <thead>
+        <tr style="background:#F3F4F6;">
+          <th style="padding:10px 12px; text-align:left; border-radius:8px 0 0 8px;">US</th>
+          <th style="padding:10px 12px; text-align:left;">UK</th>
+          <th style="padding:10px 12px; text-align:left;">EU</th>
+          <th style="padding:10px 12px; text-align:left; border-radius:0 8px 8px 0;">CM</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in [('5','3','36','22'),('6','4','37','23'),('7','5','38','24'),('8','6','39','25'),('9','7','40','26'),('10','8','41','27')] %}
+        <tr style="border-bottom:1px solid #F3F4F6;">
+          <td style="padding:10px 12px; font-weight:600;">{{ row[0] }}</td>
+          <td style="padding:10px 12px; color:var(--muted);">{{ row[1] }}</td>
+          <td style="padding:10px 12px; color:var(--muted);">{{ row[2] }}</td>
+          <td style="padding:10px 12px; color:var(--muted);">{{ row[3] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- How to measure -->
+<div class="page-card" style="margin-bottom:32px;">
+  <h3 style="margin:0 0 20px; font-size:1rem; font-weight:800;">📐 How to Measure Your Foot</h3>
+  <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:16px;">
+    {% for step in [
+      ('1️⃣','Place your foot','Stand on a piece of paper and trace the outline of your foot.'),
+      ('2️⃣','Measure length','Measure from the heel to the longest toe in centimeters.'),
+      ('3️⃣','Measure width','Measure the widest part of your foot.'),
+      ('4️⃣','Find your size','Use the chart above to match your measurement to a size.'),
+    ] %}
+    <div style="background:#F9FAFB; border-radius:16px; padding:20px; text-align:center;">
+      <div style="font-size:2rem; margin-bottom:10px;">{{ step[0] }}</div>
+      <div style="font-weight:700; font-size:0.9rem; margin-bottom:6px;">{{ step[1] }}</div>
+      <div style="color:var(--muted); font-size:0.82rem; line-height:1.5;">{{ step[2] }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

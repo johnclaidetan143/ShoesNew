@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div style="min-height:70vh; display:flex; align-items:center; justify-content:center; padding:32px 16px;">
+  <div style="width:100%; max-width:420px;">
+
+    <div class="page-card" style="padding:36px 32px;">
+
+      <!-- Logo mark -->
+      <div style="text-align:center; margin-bottom:24px;">
+        <div style="width:52px; height:52px; border-radius:14px; background:var(--primary); display:inline-flex; align-items:center; justify-content:center; font-size:1.6rem; box-shadow:0 8px 20px rgba(0,0,0,0.2);">👟</div>
+        <h2 style="margin:12px 0 4px; font-size:1.4rem; font-weight:800;">Create account</h2>
+        <p style="margin:0; color:var(--muted); font-size:0.88rem;">Join The Dream Shoe - Barili today</p>
+      </div>
+
+      <form method="post">
+        {{ form.hidden_tag() }}
+        {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+
+        <div class="input-group">
+          <label class="field-label">Full Name</label>
+          {{ form.name(class="input-field", placeholder="Your full name") }}
+        </div>
+
+        <div class="input-group">
+          <label class="field-label">Email</label>
+          {{ form.email(class="input-field", placeholder="you@example.com") }}
+        </div>
+
+        <div class="input-group">
+          <label class="field-label">Phone <span style="color:var(--muted); font-weight:400;">(optional)</span></label>
+          {{ form.phone(class="input-field", placeholder="+1 234 567 8900") }}
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="input-group">
+            <label class="field-label">Password</label>
+            {{ form.password(class="input-field", placeholder="Min. 6 characters") }}
+          </div>
+          <div class="input-group">
+            <label class="field-label">Confirm</label>
+            {{ form.confirm_password(class="input-field", placeholder="Repeat password") }}
+          </div>
+        </div>
+
+        <div class="form-actions">
+          {{ form.submit(class_='btn', style='width:100%; padding:14px; border-radius:999px; font-size:1rem;') }}
+        </div>
+      </form>
+
+      <p class="footer-note" style="margin-top:20px;">
+        Already have an account? <a href="{{ url_for('login') }}" style="color:#22c55e; font-weight:600;">Sign in</a>
+      </p>
+
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

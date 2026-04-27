@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-card">
+  <h2>My Address</h2>
+  <form method="post">
+    {{ form.hidden_tag() }}
+    <label class="field-label">Street Address</label>
+    {{ form.address(class="text-area", placeholder="Street name, building, apartment...") }}
+    <label class="field-label">City</label>
+    {{ form.city(class="input-field") }}
+    <label class="field-label">State</label>
+    {{ form.state(class="input-field") }}
+    <label class="field-label">ZIP Code</label>
+    {{ form.zip_code(class="input-field") }}
+    <div class="form-actions">
+      {{ form.submit(class_='btn') }}
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% set cat_images = {
+  'Running':    'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80',
+  'Basketball': '/static/images/Gt Cut.png',
+  'Training':   'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&q=80',
+  'Football':   'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=400&q=80',
+  'Lifestyle':  'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&q=80',
+} %}
+
+{% set cat_icons = {
+  'Running': '🏃', 'Basketball': '🏀', 'Training': '🏋️', 'Football': '⚽', 'Lifestyle': '✨'
+} %}
+
+{% set cat_colors = {
+  'Running': '#EF4444', 'Basketball': '#F97316', 'Training': '#8B5CF6', 'Football': '#10B981', 'Lifestyle': '#3B82F6'
+} %}
+
+<!-- ── SEARCH BAR ── -->
+<div class="shop-search-wrap">
+  <form method="get" action="{{ url_for('home') }}">
+    <div class="shop-search-bar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" name="q" value="{{ request.args.get('q', '') }}" placeholder="Search shoes, brands, categories..." style="flex:1; border:none; outline:none; background:transparent; font-size:0.95rem; color:var(--text);">
+      <button type="submit" class="shop-search-btn">Search</button>
+    </div>
+  </form>
+</div>
+
+<!-- ── CATEGORY TABS ── -->
+<div class="shop-cat-tabs">
+  <a href="{{ url_for('home') }}"
+    class="shop-cat-tab {% if not active_category or active_category not in categories %}shop-cat-tab--active{% endif %}">
+    All
+  </a>
+  {% for cat in categories %}
+  <a href="{{ url_for('home', category=cat) }}"
+    class="shop-cat-tab {% if active_category == cat %}shop-cat-tab--active{% endif %}"
+    style="{% if active_category == cat %}--tab-color: {{ cat_colors.get(cat, '#111827') }};{% endif %}">
+    <span>{{ cat_icons.get(cat, '👟') }}</span> {{ cat }}
+  </a>
+  {% endfor %}
+</div>
+
+<!-- ── CATEGORY HERO BANNER ── -->
+{% if active_category %}
+<div class="shop-hero-banner" style="background: linear-gradient(135deg, {{ cat_colors.get(active_category, '#111827') }}22, {{ cat_colors.get(active_category, '#111827') }}08); border-left: 4px solid {{ cat_colors.get(active_category, '#111827') }};">
+  <div>
+    <div class="shop-hero-label" style="color: {{ cat_colors.get(active_category, '#111827') }};">
+      {{ cat_icons.get(active_category, '👟') }} {{ active_category }} Collection
+    </div>
+    <h2 class="shop-hero-title">{{ active_category }} Shoes</h2>
+    <p class="shop-hero-sub">{{ products|length }} style{{ 's' if products|length != 1 }} available</p>
+  </div>
+  <img src="{{ cat_images.get(active_category, 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&q=80') }}"
+    alt="{{ active_category }}" class="shop-hero-img" />
+</div>
+{% endif %}
+
+<!-- ── SECTION HEADING ── -->
+<div class="shop-section-head">
+  <div>
+    <h3 class="shop-section-title">
+      {% if request.args.get('q') %}Results for "{{ request.args.get('q') }}"
+      {% elif active_category %}{{ active_category }}
+      {% else %}All Shoes{% endif %}
+    </h3>
+    <span class="shop-section-count">{{ products|length }} product{{ 's' if products|length != 1 }}</span>
+  </div>
+  <div class="shop-sort">
+    <span>Sort by:</span>
+    <select onchange="window.location=this.value" style="border:1.5px solid #E5E7EB; border-radius:8px; padding:6px 10px; font-size:0.85rem; background:#fff; cursor:pointer; outline:none;">
+      <option value="{{ url_for('home', category=active_category, q=request.args.get('q',''), sort='newest') }}" {{ 'selected' if request.args.get('sort','newest') == 'newest' }}>Newest</option>
+      <option value="{{ url_for('home', category=active_category, q=request.args.get('q',''), sort='price_asc') }}" {{ 'selected' if request.args.get('sort') == 'price_asc' }}>Price: Low to High</option>
+      <option value="{{ url_for('home', category=active_category, q=request.args.get('q',''), sort='price_desc') }}" {{ 'selected' if request.args.get('sort') == 'price_desc' }}>Price: High to Low</option>
+    </select>
+  </div>
+</div>
+
+<!-- ── PRODUCT GRID ── -->
+{% if products %}
+<section class="shop-grid">
+  {% for product in products %}
+  {% set accent = cat_colors.get(product.category, '#111827') %}
+  <article class="shop-card">
+
+    <!-- Image area -->
+    <div class="shop-card-img-wrap">
+      <img
+        src="{{ product.image_url if product.image_url else cat_images.get(product.category, 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80') }}"
+        alt="{{ product.name }}"
+        class="shop-card-img" />
+
+      <!-- Badges -->
+      <div class="shop-card-badges">
+        {% if product.stock == 0 %}
+        <span class="shop-badge shop-badge--red">Sold Out</span>
+        {% elif product.stock <= 5 %}
+        <span class="shop-badge shop-badge--orange">Only {{ product.stock }} left</span>
+        {% else %}
+        <span class="shop-badge shop-badge--green">In Stock</span>
+        {% endif %}
+      </div>
+
+      <!-- Quick view overlay -->
+      <div class="shop-card-overlay">
+        <a href="{{ url_for('product_page', product_id=product.id) }}" class="shop-overlay-btn">Quick View</a>
+      </div>
+    </div>
+
+    <!-- Card body -->
+    <div class="shop-card-body">
+      <div class="shop-card-cat" style="color: {{ accent }};">
+        {{ cat_icons.get(product.category, '👟') }} {{ product.category }}
+      </div>
+      <h4 class="shop-card-name">{{ product.name }}</h4>
+      <p class="shop-card-desc">{{ product.description[:80] }}{% if product.description|length > 80 %}…{% endif %}</p>
+
+      <div class="shop-card-footer">
+        <div class="shop-card-price">₱{{ '%.2f'|format(product.price) }}</div>
+        <div class="shop-card-actions">
+          <a href="{{ url_for('product_page', product_id=product.id) }}" class="shop-btn-view">Details</a>
+          {% if current_user.is_authenticated %}
+          <form method="post" action="{{ url_for('product_page', product_id=product.id) }}" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+            <input type="hidden" name="quantity" value="1">
+            <button type="button" class="shop-btn-cart"
+              onclick="window.location=this.dataset.url" data-url="{{ url_for('product_page', product_id=product.id) }}">
+              🛒
+            </button>
+          </form>
+          {% else %}
+          <button class="shop-btn-cart"
+            data-name="{{ product.name }}"
+            data-url="{{ url_for('product_page', product_id=product.id) }}"
+            onclick="showLoginPrompt(this.dataset.name, this.dataset.url)">🛒</button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </article>
+  {% endfor %}
+</section>
+
+{% else %}
+<div class="shop-empty">
+  <div class="shop-empty-icon">👟</div>
+  <h3>No shoes found</h3>
+  <p>Try a different category or search term.</p>
+  <a href="{{ url_for('home') }}" class="btn" style="border-radius:999px; padding:10px 28px; margin-top:8px; display:inline-block;">Browse All</a>
+</div>
+{% endif %}
+
+<!-- ── LOGIN PROMPT MODAL (guests) ── -->
+{% if not current_user.is_authenticated %}
+<div id="guestModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:24px; padding:36px 32px; max-width:380px; width:90%; text-align:center; box-shadow:0 24px 80px rgba(0,0,0,0.2);">
+    <div style="font-size:3rem; margin-bottom:12px;">🛒</div>
+    <h3 style="margin:0 0 8px; font-size:1.2rem; font-weight:900;" id="modalProductName">Sign in to add to cart</h3>
+    <p style="margin:0 0 24px; color:var(--muted); font-size:0.88rem; line-height:1.6;">Create a free account or sign in to purchase this item.</p>
+    <div style="display:grid; gap:10px;">
+      <a id="modalLoginBtn" href="{{ url_for('login') }}" style="display:block; background:var(--primary); color:#fff; font-weight:700; padding:13px; border-radius:999px; text-decoration:none;">Sign In</a>
+      <a id="modalRegisterBtn" href="{{ url_for('register') }}" style="display:block; background:#F3F4F6; color:var(--primary); font-weight:700; padding:13px; border-radius:999px; text-decoration:none;">Create Account</a>
+      <button onclick="document.getElementById('guestModal').style.display='none'" style="background:none; border:none; color:var(--muted); font-size:0.85rem; cursor:pointer; padding:8px;">Continue browsing</button>
+    </div>
+  </div>
+</div>
+<script>
+  function showLoginPrompt(name, productUrl) {
+    document.getElementById('modalProductName').textContent = 'Add "' + name + '" to cart?';
+    document.getElementById('modalLoginBtn').href = '{{ url_for("login") }}?next=' + encodeURIComponent(productUrl);
+    document.getElementById('modalRegisterBtn').href = '{{ url_for("register") }}?next=' + encodeURIComponent(productUrl);
+    document.getElementById('guestModal').style.display = 'flex';
+  }
+</script>
+{% endif %}
+
+{% endblock %}
