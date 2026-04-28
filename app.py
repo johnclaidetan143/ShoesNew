@@ -36,7 +36,7 @@ from forms import (
 from models import db, User, Product, CartItem, Order, OrderItem, Notification, Rating
 
 
-load_dotenv()
+load_dotenv(override=False)
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dreamshoe-secret")
