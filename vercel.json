@@ -9,6 +9,8 @@
           "app.py",
           "models.py",
           "forms.py",
+          "config.py",
+          "app/**",
           "templates/**",
           "static/**"
         ]
