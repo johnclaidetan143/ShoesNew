@@ -15,16 +15,16 @@
           "static/**"
         ]
       }
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/static/css/(.*)",
-      "dest": "/public/css/$1"
-    },
-    {
-      "src": "/static/images/(.*)",
-      "dest": "/public/images/$1"
+      "src": "/static/(.*)",
+      "dest": "/public/$1"
     },
     {
       "src": "/(.*)",
