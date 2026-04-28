@@ -1,5 +1,8 @@
 import os
-from datetime import datetime
+import random
+import smtplib
+from email.mime.text import MIMEText
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from flask import (
     Flask,
@@ -37,6 +40,33 @@ from models import db, User, Product, CartItem, Order, OrderItem, Notification, 
 
 
 load_dotenv(override=False)
+
+def send_otp_email(to_email, otp, name):
+    gmail_user = os.getenv("GMAIL_USER")
+    gmail_pass = os.getenv("GMAIL_APP_PASSWORD")
+    if not gmail_user or not gmail_pass:
+        print(f"[OTP] Email not configured. OTP for {to_email}: {otp}")
+        return
+    body = f"""Hi {name},
+
+Your verification code for The Dream Shoe - Barili is:
+
+    {otp}
+
+This code expires in 10 minutes. Do not share it with anyone.
+
+— The Dream Shoe Team"""
+    msg = MIMEText(body)
+    msg["Subject"] = "Your OTP Verification Code — The Dream Shoe"
+    msg["From"] = gmail_user
+    msg["To"] = to_email
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(gmail_user, gmail_pass)
+            server.sendmail(gmail_user, to_email, msg.as_string())
+    except Exception as e:
+        print(f"[OTP] Failed to send email: {e}")
+
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dreamshoe-secret")
@@ -148,6 +178,14 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data.strip().lower()).first()
         if user and user.check_password(form.password.data):
+            if not user.is_verified:
+                otp = str(random.randint(100000, 999999))
+                user.otp_code = otp
+                user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+                db.session.commit()
+                send_otp_email(user.email, otp, user.name)
+                flash("Please verify your email first. A new OTP has been sent.", "error")
+                return redirect(url_for("verify_otp", email=user.email))
             login_user(user)
             flash("Welcome back to The Dream Shoe - Barili!", "success")
             return redirect(next_url if next_url else url_for("home"))
@@ -166,16 +204,21 @@ def register():
         if existing:
             flash("This email is already registered.", "error")
         else:
+            otp = str(random.randint(100000, 999999))
             user = User(
                 name=form.name.data.strip(),
                 email=form.email.data.strip().lower(),
                 phone=form.phone.data.strip() if form.phone.data else None,
+                is_verified=False,
+                otp_code=otp,
+                otp_expiry=datetime.utcnow() + timedelta(minutes=10),
             )
             user.set_password(form.password.data)
             db.session.add(user)
             db.session.commit()
-            flash("Registration successful. Please log in to continue.", "success")
-            return redirect(url_for("login", next=next_url) if next_url else url_for("login"))
+            send_otp_email(user.email, otp, user.name)
+            flash("Registration successful! Check your email for the OTP code.", "success")
+            return redirect(url_for("verify_otp", email=user.email))
     return render_template("register.html", form=form, next_url=next_url)
 
 
@@ -503,6 +546,47 @@ def rate_order(order_id):
     flash("Thank you for your rating! ⭐", "success")
     return redirect(url_for("history"))
 
+
+
+@app.route("/verify-otp", methods=["GET", "POST"])
+def verify_otp():
+    email = request.args.get("email") or request.form.get("email", "")
+    user = User.query.filter_by(email=email.strip().lower()).first()
+    if not user:
+        flash("Invalid verification link.", "error")
+        return redirect(url_for("register"))
+    if user.is_verified:
+        flash("Email already verified. Please log in.", "success")
+        return redirect(url_for("login"))
+    if request.method == "POST":
+        entered = request.form.get("otp", "").strip()
+        if not user.otp_expiry or datetime.utcnow() > user.otp_expiry:
+            flash("OTP has expired. Please request a new one.", "error")
+        elif entered != user.otp_code:
+            flash("Incorrect OTP. Please try again.", "error")
+        else:
+            user.is_verified = True
+            user.otp_code = None
+            user.otp_expiry = None
+            db.session.commit()
+            login_user(user)
+            flash("Email verified! Welcome to The Dream Shoe - Barili! 🎉", "success")
+            return redirect(url_for("home"))
+    return render_template("verify_otp.html", email=email)
+
+
+@app.route("/resend-otp", methods=["POST"])
+def resend_otp():
+    email = request.form.get("email", "").strip().lower()
+    user = User.query.filter_by(email=email).first()
+    if user and not user.is_verified:
+        otp = str(random.randint(100000, 999999))
+        user.otp_code = otp
+        user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+        db.session.commit()
+        send_otp_email(user.email, otp, user.name)
+        flash("A new OTP has been sent to your email.", "success")
+    return redirect(url_for("verify_otp", email=email))
 
 @app.route("/history")
 @login_required

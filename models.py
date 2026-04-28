@@ -19,6 +19,9 @@ class User(db.Model, UserMixin):
     notify_in_app = db.Column(db.Boolean, default=True)
     notify_email = db.Column(db.Boolean, default=True)
     invisible_on_comments = db.Column(db.Boolean, default=False)
+    is_verified = db.Column(db.Boolean, default=False)
+    otp_code = db.Column(db.String(6), nullable=True)
+    otp_expiry = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     cart_items = db.relationship("CartItem", backref="user", lazy=True, cascade="all, delete-orphan")
