@@ -87,13 +87,18 @@ db.init_app(app)
 
 def _seed_db():
     """Seed default users and products if DB is empty. Safe to call multiple times."""
+    admin = User.query.filter_by(email=ADMIN_EMAIL).first()
+    if not admin:
+        admin = User(name="Admin", email=ADMIN_EMAIL, phone="+1234567890", is_verified=True)
+        admin.set_password("admin@123")
+        db.session.add(admin)
+        db.session.commit()
+
     if Product.query.first():
         return
-    admin = User(name="Admin", email="admin@dreamshoe.com", phone="+1234567890")
-    admin.set_password("admin@123")
     customer = User(name="Samantha Hope", email="customer@example.com", phone="+0987654321")
     customer.set_password("customer@123")
-    db.session.add_all([admin, customer])
+    db.session.add(customer)
     db.session.flush()
     db.session.add(Notification(user_id=customer.id, message="Welcome to Shoes!"))
     products = [
@@ -178,6 +183,11 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data.strip().lower()).first()
         if user and user.check_password(form.password.data):
+            is_admin_login = (user.email == ADMIN_EMAIL) or (getattr(user, "role", "") == "admin")
+            if is_admin_login:
+                login_user(user)
+                flash("Welcome back, Admin!", "success")
+                return redirect(url_for("admin_dashboard"))
             if not user.is_verified:
                 otp = str(random.randint(100000, 999999))
                 user.otp_code = otp
@@ -676,7 +686,13 @@ def about():
 
 
 def is_admin_user(user):
-    return bool(getattr(user, "is_authenticated", False) and getattr(user, "email", "") == ADMIN_EMAIL)
+    return bool(
+        getattr(user, "is_authenticated", False)
+        and (
+            getattr(user, "email", "") == ADMIN_EMAIL
+            or getattr(user, "role", "") == "admin"
+        )
+    )
 
 
 def require_admin_access():
