@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>500: Internal Server Error</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #111827;
+      --muted: #4b5563;
+      --card: #f3f4f6;
+      --danger: #ef4444;
+      --ok: #10b981;
+      --link: #2563eb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    .error-page {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .status-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .status-line {
+      margin: 0;
+      padding: 6px 0 6px 12px;
+      border-left: 4px solid transparent;
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .status-line strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .status-line.is-error {
+      border-left-color: var(--danger);
+    }
+
+    .status-line.is-ok {
+      border-left-color: var(--ok);
+    }
+
+    .error-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(17, 24, 39, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .error-card p {
+      margin: 0;
+      color: #1f2937;
+      font-size: 0.95rem;
+    }
+
+    .error-card p:first-child {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text);
+    }
+
+    .help-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .help-list li {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .help-list li::before {
+      content: "•";
+      color: #9ca3af;
+      line-height: 1.2;
+    }
+
+    .help-list a {
+      color: var(--link);
+      text-decoration: none;
+      transition: color 0.2s ease, text-decoration-color 0.2s ease;
+    }
+
+    .help-list a:hover {
+      color: #1d4ed8;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 18px;
+      }
+
+      .error-page {
+        gap: 20px;
+      }
+
+      .error-card {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="error-page">
+    <section class="status-list" aria-label="System status">
+      <p class="status-line is-error"><strong>This Serverless Function</strong> has crashed.</p>
+      <p class="status-line is-ok"><strong>Your connection</strong> is working correctly.</p>
+      <p class="status-line is-ok"><strong>Vercel</strong> is working correctly.</p>
+    </section>
+
+    <section class="error-card" aria-label="Error details">
+      <p>500: INTERNAL_SERVER_ERROR</p>
+      <p>Code: FUNCTION_INVOCATION_FAILED</p>
+      <p>ID: sin1::example-id-123456789</p>
+    </section>
+
+    <ul class="help-list" aria-label="Help links">
+      <li>If you are a visitor, contact the website owner or try again later.</li>
+      <li>
+        If you are the owner,
+        <a href="https://vercel.com/docs/functions/troubleshooting" target="_blank" rel="noopener noreferrer">learn how to fix the error</a>
+        and
+        <a href="https://vercel.com/docs/observability/runtime-logs" target="_blank" rel="noopener noreferrer">check the logs</a>.
+      </li>
+    </ul>
+  </main>
+</body>
+</html>
