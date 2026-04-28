@@ -41,10 +41,23 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dreamshoe-secret")
-database_url = os.getenv("DATABASE_URL", "sqlite:///dreamshoe.db")
+is_vercel_runtime = bool(os.getenv("VERCEL") or os.getenv("VERCEL_ENV"))
+database_url = (os.getenv("DATABASE_URL") or "").strip()
+
+if not database_url:
+    if is_vercel_runtime:
+        raise RuntimeError(
+            "DATABASE_URL is not set. Configure it in Vercel Project Settings -> Environment Variables."
+        )
+    database_url = "sqlite:///dreamshoe.db"
+
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 if "<YOUR_DB_PASSWORD>" in database_url:
+    if is_vercel_runtime:
+        raise RuntimeError(
+            "DATABASE_URL contains <YOUR_DB_PASSWORD>. Set a full database connection string in Vercel."
+        )
     print("Warning: DATABASE_URL still has <YOUR_DB_PASSWORD>. Falling back to sqlite:///dreamshoe.db.")
     database_url = "sqlite:///dreamshoe.db"
 if database_url.startswith("postgresql://"):
@@ -61,11 +74,18 @@ if database_url.startswith("postgresql://"):
         elif has_pg8000:
             database_url = database_url.replace("postgresql://", "postgresql+pg8000://", 1)
         else:
+            if is_vercel_runtime:
+                raise RuntimeError(
+                    "No PostgreSQL driver found. Ensure psycopg2-binary or pg8000 is in requirements.txt."
+                )
             print("Warning: No PostgreSQL driver found (psycopg2/pg8000). Falling back to sqlite:///dreamshoe.db.")
             database_url = "sqlite:///dreamshoe.db"
 if "supabase.co" in database_url and "sslmode=" not in database_url:
     join_char = "&" if "?" in database_url else "?"
     database_url = f"{database_url}{join_char}sslmode=require"
+if is_vercel_runtime and database_url.startswith("sqlite:///"):
+    # Vercel filesystem is read-only except /tmp.
+    database_url = "sqlite:////tmp/dreamshoe.db"
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["WTF_CSRF_TIME_LIMIT"] = None
