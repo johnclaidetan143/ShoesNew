@@ -53,6 +53,11 @@ app.config["WTF_CSRF_TIME_LIMIT"] = None
 app.config["WTF_CSRF_EXEMPT_LIST"] = ["/cart/remove"]
 
 db.init_app(app)
+
+@app.before_request
+def create_tables():
+    db.create_all()
+
 csrf = CSRFProtect(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
