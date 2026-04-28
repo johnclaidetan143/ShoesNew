@@ -54,9 +54,52 @@ app.config["WTF_CSRF_EXEMPT_LIST"] = ["/cart/remove"]
 
 db.init_app(app)
 
+
+def _seed_db():
+    """Seed default users and products if DB is empty. Safe to call multiple times."""
+    if Product.query.first():
+        return
+    admin = User(name="Admin", email="admin@dreamshoe.com", phone="+1234567890")
+    admin.set_password("admin@123")
+    customer = User(name="Samantha Hope", email="customer@example.com", phone="+0987654321")
+    customer.set_password("customer@123")
+    db.session.add_all([admin, customer])
+    db.session.flush()
+    db.session.add(Notification(user_id=customer.id, message="Welcome to The Dream Shoe - Barili!"))
+    products = [
+        Product(name="GT Cut 3", category="Basketball", price=3499.99, stock=30, description="Designed for the game's biggest moments with full-length cushioning.", image_url="/static/images/Gt Cut.png"),
+        Product(name="Ja Morant 3", category="Basketball", price=2999.99, stock=25, description="Built for explosive guards with Lightstrike Pro cushioning.", image_url="/static/images/JaMorant3_basketball.png"),
+        Product(name="Jordan Luka 2", category="Basketball", price=2799.99, stock=35, description="Built for playmakers with responsive cushioning and wide base.", image_url="/static/images/jordanluka_basketball.png"),
+        Product(name="Kobe 9", category="Basketball", price=3199.99, stock=28, description="Low-profile design for speed and precision on the court.", image_url="/static/images/KOBE 9_basketball.png"),
+        Product(name="Nike Sabrina 2", category="Basketball", price=2599.99, stock=32, description="Lightweight foam cushioning for explosive lateral movement.", image_url="/static/images/sabrina2_basketball.png"),
+        Product(name="Jordan Tatum 2", category="Basketball", price=2899.99, stock=28, description="Engineered for versatile forwards with all-around court dominance.", image_url="/static/images/tatum_basketball.png"),
+        Product(name="Curry 13", category="Basketball", price=3099.99, stock=30, description="Stephen Curry's signature shoe built for elite shooting and quick cuts.", image_url="/static/images/Curry13_basketball.png"),
+        Product(name="Nike Sabrina 3", category="Basketball", price=2699.99, stock=27, description="Next-gen Sabrina with improved lockdown fit and court feel.", image_url="/static/images/Sabrina3_basketball.png"),
+        Product(name="Nike Air Zoom Pegasus 40", category="Running", price=2599.99, stock=50, description="Smooth responsive ride for everyday runners with Zoom Air cushioning.", image_url="/static/images/Men%27s%20Nike%20ACG%20Pegasus%20Trail_running.png"),
+        Product(name="Adidas Ultraboost 23", category="Running", price=3299.99, stock=40, description="Incredible energy return with Boost midsole technology.", image_url="/static/images/T%C3%AAnis%20Nike%20Revolution%205_running.png"),
+        Product(name="New Balance Fresh Foam 1080", category="Running", price=2899.99, stock=35, description="Maximum cushioning for long-distance runners.", image_url="/static/images/Chaussures%20de%20running%20Skyrocket%20Lite%20PUMA%20Black%20White_running.png"),
+        Product(name="ASICS Gel-Nimbus 25", category="Running", price=2799.99, stock=45, description="Premium cushioning and stability for everyday runners.", image_url="/static/images/Asics%20Mens%20Gel%20Nimbus%2027%20Road_running.png"),
+        Product(name="Nike Metcon 9", category="Training", price=2499.99, stock=55, description="The ultimate cross-training shoe with flat stable heel.", image_url="/static/images/Nike%20Metcon%209_training.png"),
+        Product(name="Reebok Nano X3", category="Training", price=2299.99, stock=48, description="Built for the toughest workouts with stability and flexibility.", image_url="/static/images/Brooks%20Men%27s%20Trace%203_training.png"),
+        Product(name="Adidas Powerlift 5", category="Training", price=2699.99, stock=40, description="Engineered for powerlifters with elevated heel and firm midsole.", image_url="/static/images/FitVille%20Extra%20Wide%20Shoes_training.png"),
+        Product(name="Puma Fuse 2.0", category="Training", price=2199.99, stock=60, description="Versatile training shoe ideal for HIIT and circuit training.", image_url="/static/images/PUMA%20Neutron%20Men%27s%20Training%20Shoes_training.png"),
+        Product(name="Nike Mercurial Vapor 15", category="Football", price=3999.99, stock=20, description="Designed for speed with lightweight upper and all-weather grip.", image_url="/static/images/Adidas%20footballshoes_football.png"),
+        Product(name="Adidas Predator Accuracy", category="Football", price=3599.99, stock=22, description="Precision and control with rubber elements for enhanced grip.", image_url="/static/images/Adidas%20Jude%20Bellingham_football.png"),
+        Product(name="Puma Future 7 Pro", category="Football", price=3299.99, stock=18, description="Adaptive fit with FUZIONFIT+ compression band.", image_url="/static/images/PUMA%20ATTACANTO%20II_football.png"),
+        Product(name="New Balance Furon v7", category="Football", price=2999.99, stock=25, description="Speed-focused boot with seamless knit upper.", image_url="/static/images/PUMA%20Mens%20Ultra_football.png"),
+        Product(name="Adidas Copa Mundial", category="Football", price=2799.99, stock=30, description="Legendary football boot with premium kangaroo leather upper.", image_url="/static/images/adidas%20Copa%20Mundial_football.png"),
+        Product(name="Nike Air Max 270", category="Lifestyle", price=2499.99, stock=65, description="Iconic lifestyle sneaker with the largest Air unit ever.", image_url="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80"),
+        Product(name="Adidas Stan Smith", category="Lifestyle", price=2199.99, stock=80, description="A timeless classic with clean leather upper.", image_url="https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&q=80"),
+        Product(name="Puma RS-X", category="Lifestyle", price=2399.99, stock=55, description="Retro-inspired chunky sneaker with bold color blocking.", image_url="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=400&q=80"),
+        Product(name="New Balance 574", category="Lifestyle", price=2099.99, stock=70, description="A heritage classic reimagined for modern streets.", image_url="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&q=80"),
+    ]
+    db.session.add_all(products)
+    db.session.commit()
+
 @app.before_request
 def create_tables():
     db.create_all()
+    _seed_db()
 
 csrf = CSRFProtect(app)
 login_manager = LoginManager(app)
