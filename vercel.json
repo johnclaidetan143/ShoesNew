@@ -19,6 +19,14 @@
   ],
   "routes": [
     {
+      "src": "/static/css/(.*)",
+      "dest": "/public/css/$1"
+    },
+    {
+      "src": "/static/images/(.*)",
+      "dest": "/public/images/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "api/index.py"
     }

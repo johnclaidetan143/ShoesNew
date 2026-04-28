@@ -1,0 +1,2 @@
+This folder is reserved for PharmaQuick product or mascot images.
+The current app uses remote placeholder image URLs and CSS backgrounds.
