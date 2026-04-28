@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin — {{ title if title else 'Dashboard' }} | The Dream Shoe</title>
+  <title>Admin — {{ title if title else 'Dashboard' }} | Shoes</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -120,10 +120,10 @@
 <aside class="sidebar">
   <div class="sidebar-logo">
     <div class="sidebar-logo-icon">
-      <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="The Dream Shoe - Barili Logo" />
+      <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Shoes Logo" />
     </div>
     <div>
-      <div class="sidebar-logo-text">Dream Shoe</div>
+      <div class="sidebar-logo-text">Shoes</div>
       <div class="sidebar-logo-sub">Admin Panel</div>
     </div>
   </div>
@@ -161,7 +161,7 @@
     <div class="topbar-right">
       <span style="font-size:0.85rem; color:#6B7280;">{{ current_user.name }}</span>
       <div class="admin-avatar">
-        <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="The Dream Shoe - Barili Logo" />
+        <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Shoes Logo" />
       </div>
     </div>
   </div>

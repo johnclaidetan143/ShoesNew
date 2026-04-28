@@ -49,15 +49,15 @@ def send_otp_email(to_email, otp, name):
         return
     body = f"""Hi {name},
 
-Your verification code for The Dream Shoe - Barili is:
+Your verification code for Shoes is:
 
     {otp}
 
 This code expires in 10 minutes. Do not share it with anyone.
 
-— The Dream Shoe Team"""
+— Shoes Team"""
     msg = MIMEText(body)
-    msg["Subject"] = "Your OTP Verification Code — The Dream Shoe"
+    msg["Subject"] = "Your OTP Verification Code — Shoes"
     msg["From"] = gmail_user
     msg["To"] = to_email
     try:
@@ -95,7 +95,7 @@ def _seed_db():
     customer.set_password("customer@123")
     db.session.add_all([admin, customer])
     db.session.flush()
-    db.session.add(Notification(user_id=customer.id, message="Welcome to The Dream Shoe - Barili!"))
+    db.session.add(Notification(user_id=customer.id, message="Welcome to Shoes!"))
     products = [
         Product(name="GT Cut 3", category="Basketball", price=3499.99, stock=30, description="Designed for the game's biggest moments with full-length cushioning.", image_url="/static/images/Gt Cut.png"),
         Product(name="Ja Morant 3", category="Basketball", price=2999.99, stock=25, description="Built for explosive guards with Lightstrike Pro cushioning.", image_url="/static/images/JaMorant3_basketball.png"),
@@ -187,7 +187,7 @@ def login():
                 flash("Please verify your email first. A new OTP has been sent.", "error")
                 return redirect(url_for("verify_otp", email=user.email))
             login_user(user)
-            flash("Welcome back to The Dream Shoe - Barili!", "success")
+            flash("Welcome back to Shoes!", "success")
             return redirect(next_url if next_url else url_for("home"))
         flash("Invalid email or password.", "error")
     return render_template("login.html", form=form, next_url=next_url)
@@ -282,7 +282,7 @@ def seed_shoe():
     customer.set_password("customer@123")
     db.session.add(customer)
     db.session.flush()
-    db.session.add(Notification(user_id=customer.id, message="Welcome to The Dream Shoe - Barili! Find your perfect pair."))
+    db.session.add(Notification(user_id=customer.id, message="Welcome to Shoes! Find your perfect pair."))
 
     products = [
         Product(name="Nike Air Zoom Pegasus 40", category="Running", price=2599.99, stock=50, description="The Nike Air Zoom Pegasus 40 delivers a smooth, responsive ride for everyday runners.", image_url="/static/images/Men%27s%20Nike%20ACG%20Pegasus%20Trail_running.png"),
@@ -570,7 +570,7 @@ def verify_otp():
             user.otp_expiry = None
             db.session.commit()
             login_user(user)
-            flash("Email verified! Welcome to The Dream Shoe - Barili! 🎉", "success")
+            flash("Email verified! Welcome to Shoes! 🎉", "success")
             return redirect(url_for("home"))
     return render_template("verify_otp.html", email=email)
 
@@ -902,7 +902,7 @@ if __name__ == "__main__":
             customer.set_password("customer@123")
             db.session.add_all([admin, customer])
             db.session.flush()
-            db.session.add(Notification(user_id=customer.id, message="Welcome to The Dream Shoe - Barili!"))
+            db.session.add(Notification(user_id=customer.id, message="Welcome to Shoes!"))
             products = [
                 Product(name="GT Cut 3", category="Basketball", price=199.99, stock=30, description="Designed for the game's biggest moments with full-length cushioning.", image_url="/static/images/Gt Cut.png"),
                 Product(name="Ja Morant 3", category="Basketball", price=149.99, stock=25, description="Built for explosive guards with Lightstrike Pro cushioning.", image_url="/static/images/JaMorant3_basketball.png"),

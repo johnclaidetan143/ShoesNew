@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Dream Shoe - Barili | {{ title if title else 'Find Your Perfect Pair' }}</title>
+  <title>Shoes | {{ title if title else 'Find Your Perfect Pair' }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -13,7 +13,7 @@
 
 <header class="navbar">
   <a href="{{ url_for('index') }}" class="navbar-logo" style="gap:0;">
-    <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="The Dream Shoe - Barili" style="height:44px; width:44px; border-radius:50%; object-fit:cover;" />
+    <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Shoes" style="height:44px; width:44px; border-radius:50%; object-fit:cover;" />
   </a>
 
   <nav class="navbar-links">
@@ -94,7 +94,7 @@
 
       <!-- Brand -->
       <div style="text-align:center;">
-        <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="The Dream Shoe" style="height:60px; width:auto; margin-bottom:8px;" />
+        <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Shoes" style="height:60px; width:auto; margin-bottom:8px;" />
         <p style="color:#A5B4FC; font-size:0.75rem; line-height:1.5; margin:0; max-width:220px;">Barili's premier destination for authentic sports and lifestyle footwear.</p>
       </div>
 
@@ -140,7 +140,7 @@
 
     <!-- Bottom bar -->
     <div style="border-top:1px solid #312E81; padding:12px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-      <p style="margin:0; color:#6366F1; font-size:0.72rem;">© {{ current_year }} <span style="color:#818CF8; font-weight:700;">The Dream Shoe - Barili</span>. All rights reserved.</p>
+      <p style="margin:0; color:#6366F1; font-size:0.72rem;">© {{ current_year }} <span style="color:#818CF8; font-weight:700;">Shoes</span>. All rights reserved.</p>
       <div style="display:flex; gap:6px;">
         {% for cat in ['🏀','🏃','⚽','🏋️','✨'] %}
         <span style="width:24px; height:24px; background:#312E81; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">{{ cat }}</span>
