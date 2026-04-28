@@ -21,6 +21,7 @@
     <a href="{{ url_for('home') }}" class="{{ 'navbar-active' if request.endpoint == 'home' }}">Shop</a>
     <a href="{{ url_for('prescriptions') }}" class="{{ 'navbar-active' if request.endpoint == 'prescriptions' }}">Size Guide</a>
     <a href="{{ url_for('consult') }}" class="{{ 'navbar-active' if request.endpoint == 'consult' }}">Style Advice</a>
+    <a href="{{ url_for('about') }}" class="{{ 'navbar-active' if request.endpoint == 'about' }}">About Us</a>
     {% if current_user.is_authenticated and current_user.email == 'admin@dreamshoe.com' %}
     <a href="{{ url_for('admin_dashboard') }}" class="{{ 'navbar-active' if request.endpoint == 'admin_dashboard' }}" style="color:#F97316; font-weight:700;">Admin Panel</a>
     <a href="{{ url_for('admin_about') }}" class="{{ 'navbar-active' if request.endpoint == 'admin_about' }}" style="color:#F97316; font-weight:700;">Admin About</a>
@@ -58,6 +59,7 @@
   <a href="{{ url_for('home') }}">Shop</a>
   <a href="{{ url_for('prescriptions') }}">Size Guide</a>
   <a href="{{ url_for('consult') }}">Style Advice</a>
+  <a href="{{ url_for('about') }}">About Us</a>
   {% if current_user.is_authenticated and current_user.email == 'admin@dreamshoe.com' %}
   <a href="{{ url_for('admin_dashboard') }}">Admin Panel</a>
   <a href="{{ url_for('admin_about') }}">Admin About</a>
