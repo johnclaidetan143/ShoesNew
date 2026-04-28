@@ -41,10 +41,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dreamshoe-secret")
-database_url = os.getenv("DATABASE_URL")
-if not database_url:
-    # Vercel functions cannot write to project root; /tmp is writable during runtime.
-    database_url = "sqlite:////tmp/dreamshoe.db"
+database_url = os.getenv("DATABASE_URL", "sqlite:///dreamshoe.db")
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 if "<YOUR_DB_PASSWORD>" in database_url:
@@ -59,14 +56,13 @@ if database_url.startswith("postgresql://"):
     elif "+pg8000" in database_url and not has_pg8000 and has_psycopg2:
         database_url = database_url.replace("postgresql+pg8000://", "postgresql+psycopg2://", 1)
     elif "+psycopg2" not in database_url and "+pg8000" not in database_url:
-        # Prefer pg8000 (pure Python) in serverless deployments for better portability.
-        if has_pg8000:
-            database_url = database_url.replace("postgresql://", "postgresql+pg8000://", 1)
-        elif has_psycopg2:
+        if has_psycopg2:
             database_url = database_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+        elif has_pg8000:
+            database_url = database_url.replace("postgresql://", "postgresql+pg8000://", 1)
         else:
-            print("Warning: No PostgreSQL driver found (psycopg2/pg8000). Falling back to sqlite:////tmp/dreamshoe.db.")
-            database_url = "sqlite:////tmp/dreamshoe.db"
+            print("Warning: No PostgreSQL driver found (psycopg2/pg8000). Falling back to sqlite:///dreamshoe.db.")
+            database_url = "sqlite:///dreamshoe.db"
 if "supabase.co" in database_url and "sslmode=" not in database_url:
     join_char = "&" if "?" in database_url else "?"
     database_url = f"{database_url}{join_char}sslmode=require"
@@ -80,13 +76,6 @@ csrf = CSRFProtect(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
 login_manager.login_message = "Please log in to continue."
-
-# Ensure tables exist when running under serverless entrypoints.
-with app.app_context():
-    try:
-        db.create_all()
-    except Exception as exc:
-        print(f"Warning: database initialization failed during startup: {exc}")
 
 CATEGORIES = ["Running", "Basketball", "Training", "Football", "Lifestyle"]
 ADMIN_EMAIL = "admin@dreamshoe.com"
@@ -117,11 +106,7 @@ def inject_common_data():
 @app.route("/")
 def index():
     form = SearchForm()
-    try:
-        trending = Product.query.order_by(Product.created_at.desc()).limit(8).all()
-    except Exception as exc:
-        print(f"Warning: failed to load trending products: {exc}")
-        trending = []
+    trending = Product.query.order_by(Product.created_at.desc()).limit(8).all()
     return render_template("index.html", form=form, trending=trending)
 
 
