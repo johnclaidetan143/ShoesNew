@@ -43,8 +43,7 @@ app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dreamshoe-secret")
 database_url = (os.getenv("DATABASE_URL") or "").strip()
 if not database_url:
     database_url = "sqlite:////tmp/dreamshoe.db"
-if database_url.startswith("postgres://"):
-    database_url = database_url.replace("postgres://", "postgresql://", 1)
+if database_url.startswith("postgres://"):`n    database_url = database_url.replace("postgres://", "postgresql://", 1)`nif database_url.startswith("postgresql://") and "+" not in database_url.split("://")[0]:`n    database_url = database_url.replace("postgresql://", "postgresql+pg8000://", 1)
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["WTF_CSRF_TIME_LIMIT"] = None
