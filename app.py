@@ -151,8 +151,11 @@ def _seed_db():
 
 @app.before_request
 def create_tables():
-    db.create_all()
-    _seed_db()
+    try:
+        db.create_all()
+        _seed_db()
+    except Exception as e:
+        print(f"[STARTUP] DB init error (non-fatal): {e}")
 
 csrf = CSRFProtect(app)
 login_manager = LoginManager(app)
@@ -188,7 +191,11 @@ def inject_common_data():
 @app.route("/")
 def index():
     form = SearchForm()
-    trending = Product.query.order_by(Product.created_at.desc()).limit(8).all()
+    try:
+        trending = Product.query.order_by(Product.created_at.desc()).limit(8).all()
+    except Exception as e:
+        print(f"[INDEX] DB error: {e}")
+        trending = []
     return render_template("index.html", form=form, trending=trending)
 
 
