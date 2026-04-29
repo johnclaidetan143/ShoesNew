@@ -47,17 +47,15 @@ def send_otp_email(to_email, otp, name):
     if not gmail_user or not gmail_pass:
         print(f"[OTP] Email not configured. OTP for {to_email}: {otp}")
         return False, "Email service is not configured"
-    body = f"""Hi {name},
-
-Your verification code for Shoes is:
-
-    {otp}
-
-This code expires in 10 minutes. Do not share it with anyone.
-
-— Shoes Team"""
+    body = (
+        f"Hi {name},\n\n"
+        f"Your verification code for Shoes is:\n\n"
+        f"    {otp}\n\n"
+        f"This code expires in 10 minutes. Do not share it with anyone.\n\n"
+        f"-- Shoes Team"
+    )
     msg = MIMEText(body)
-    msg["Subject"] = "Your OTP Verification Code — Shoes"
+    msg["Subject"] = "Your OTP Verification Code - Shoes"
     msg["From"] = gmail_user
     msg["To"] = to_email
     try:
@@ -68,7 +66,6 @@ This code expires in 10 minutes. Do not share it with anyone.
     except Exception as e:
         print(f"[OTP] Failed to send email: {e}")
         return False, str(e)
-
 
 def maybe_flash_dev_otp(user, email_sent, error_message):
     is_dev = app.debug or os.getenv("FLASK_ENV", "").lower() == "development"
