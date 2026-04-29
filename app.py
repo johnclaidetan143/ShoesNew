@@ -1,6 +1,10 @@
 import os
 import random
 import smtplib
+import ssl
+import json
+import urllib.request
+import urllib.error
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
@@ -42,17 +46,74 @@ from models import db, User, Product, CartItem, Order, OrderItem, Notification, 
 
 load_dotenv(override=False)
 
+
+def send_otp_via_resend(to_email, otp, name, sender):
+    api_key = (os.getenv("RESEND_API_KEY") or "").strip()
+    if not api_key:
+        return False, "RESEND_API_KEY is missing"
+
+    subject = "Your OTP Verification Code - Shoes"
+    text_body = (
+        f"Hi {name},\n\n"
+        f"Your verification code for Shoes is:\n\n"
+        f"    {otp}\n\n"
+        f"This code expires in 10 minutes.\n"
+        f"Do not share it with anyone.\n\n"
+        f"-- Shoes Team"
+    )
+    payload = json.dumps(
+        {
+            "from": sender,
+            "to": [to_email],
+            "subject": subject,
+            "text": text_body,
+        }
+    ).encode("utf-8")
+    req = urllib.request.Request(
+        "https://api.resend.com/emails",
+        data=payload,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            if 200 <= resp.status < 300:
+                print("OTP SENT OK")
+                return True, ""
+            body = resp.read().decode("utf-8", errors="ignore")
+            return False, f"Resend API failed: HTTP {resp.status} {body}"
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="ignore")
+        return False, f"Resend HTTPError {e.code}: {body}"
+    except Exception as e:
+        return False, f"Resend send failed: {e}"
+
+
 def send_otp_email(to_email, otp, name):
-    gmail_user = os.getenv("GMAIL_USER", "").strip()
-    gmail_pass = os.getenv("GMAIL_APP_PASSWORD", "").strip()
+    host = (os.getenv("FRESHWASH_OTP_SMTP_HOST") or "smtp.gmail.com").strip()
+    port = int((os.getenv("FRESHWASH_OTP_SMTP_PORT") or "587").strip())
+    use_tls = (os.getenv("FRESHWASH_OTP_SMTP_TLS") or "true").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+    username = (os.getenv("EMAIL_USER") or "").strip()
+    password = (os.getenv("EMAIL_PASS") or "").strip()
+    sender = (os.getenv("FRESHWASH_OTP_SENDER_EMAIL") or username).strip()
 
-    print(f"[OTP] Sending to: {to_email}")
-    print(f"[OTP] GMAIL_USER configured: {'yes' if gmail_user else 'NO - missing'}")
-    print(f"[OTP] GMAIL_APP_PASSWORD configured: {'yes' if gmail_pass else 'NO - missing'}")
+    print("SMTP_USER:", os.getenv("EMAIL_USER"))
+    print("SENDING OTP TO:", to_email)
 
-    if not gmail_user or not gmail_pass:
-        print(f"[OTP] FALLBACK - OTP for {to_email} is: {otp}")
-        return False, "GMAIL_USER or GMAIL_APP_PASSWORD not set in environment variables"
+    resend_key = (os.getenv("RESEND_API_KEY") or "").strip()
+    if resend_key:
+        return send_otp_via_resend(to_email, otp, name, sender)
+
+    if not username or not password:
+        return False, "EMAIL_USER or EMAIL_PASS is missing in environment variables"
 
     body = (
         f"Hi {name},\n\n"
@@ -64,35 +125,31 @@ def send_otp_email(to_email, otp, name):
     )
     msg = MIMEText(body, "plain", "utf-8")
     msg["Subject"] = "Your OTP Verification Code - Shoes"
-    msg["From"] = gmail_user
+    msg["From"] = sender
     msg["To"] = to_email
 
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
-            server.login(gmail_user, gmail_pass)
-            server.sendmail(gmail_user, to_email, msg.as_string())
-        print(f"[OTP] Successfully sent to {to_email}")
+        if port == 465 and not use_tls:
+            with smtplib.SMTP_SSL(host, port, timeout=15) as server:
+                server.login(username, password)
+                server.sendmail(sender, to_email, msg.as_string())
+        else:
+            with smtplib.SMTP(host, port, timeout=15) as server:
+                server.ehlo()
+                if use_tls:
+                    server.starttls(context=ssl.create_default_context())
+                    server.ehlo()
+                server.login(username, password)
+                server.sendmail(sender, to_email, msg.as_string())
+        print("OTP SENT OK")
         return True, ""
     except smtplib.SMTPAuthenticationError:
-        err = "Gmail authentication failed. Check GMAIL_APP_PASSWORD."
-        print(f"[OTP] ERROR: {err}")
+        err = "Gmail authentication failed. Use Gmail App Password in EMAIL_PASS."
+        print(err)
         return False, err
     except Exception as e:
         print(f"[OTP] ERROR sending to {to_email}: {e}")
         return False, str(e)
-
-
-def maybe_flash_dev_otp(user, email_sent, error_message):
-    if not email_sent:
-        flash(f"Email could not be sent ({error_message}). Your OTP is: {user.otp_code}", "warning")
-
-def maybe_flash_dev_otp(user, email_sent, error_message):
-    is_dev = app.debug or os.getenv("FLASK_ENV", "").lower() == "development"
-    if not email_sent and is_dev:
-        flash(
-            f"DEV OTP fallback: {user.otp_code} (email failed: {error_message})",
-            "warning",
-        )
 
 
 app = Flask(__name__)
@@ -221,10 +278,12 @@ def login():
                 user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
                 db.session.commit()
                 email_sent, email_error = send_otp_email(user.email, otp, user.name)
-                maybe_flash_dev_otp(user, email_sent, email_error)
-                flash("Please verify your email first. A new OTP has been sent.", "error")
+                if not email_sent:
+                    flash(f"OTP email send failed: {email_error}", "error")
+                else:
+                    flash("Please verify your email first. A new OTP has been sent.", "error")
                 session["pending_email"] = user.email
-            return redirect(url_for("verify_otp"))
+                return redirect(url_for("verify_otp"))
             login_user(user)
             flash("Welcome back to Shoes!", "success")
             return redirect(next_url if next_url else url_for("home"))
@@ -256,8 +315,10 @@ def register():
             db.session.add(user)
             db.session.commit()
             email_sent, email_error = send_otp_email(user.email, otp, user.name)
-            maybe_flash_dev_otp(user, email_sent, email_error)
-            flash("Registration successful! Check your email for the OTP code.", "success")
+            if not email_sent:
+                flash(f"OTP email send failed: {email_error}", "error")
+            else:
+                flash("Registration successful! Check your email for the OTP code.", "success")
             session["pending_email"] = user.email
             return redirect(url_for("verify_otp"))
     return render_template("register.html", form=form, next_url=next_url)
@@ -615,8 +676,8 @@ def verify_otp():
     session["pending_email"] = email
 
     if request.method == "POST":
-        entered = request.form.get("otp", "").strip()
-        saved = (user.otp_code or "").strip()
+        entered = str(request.form.get("otp", "")).strip()
+        saved = str(user.otp_code or "").strip()
 
         print("VERIFY EMAIL:", email)
         print("ENTERED OTP:", repr(entered))
@@ -645,6 +706,7 @@ def resend_otp():
     email = (
         session.get("pending_email")
         or request.form.get("email", "")
+        or request.args.get("email", "")
     ).strip().lower()
     user = User.query.filter_by(email=email).first()
     if user and not user.is_verified:
@@ -654,8 +716,10 @@ def resend_otp():
         db.session.commit()
         session["pending_email"] = email
         email_sent, email_error = send_otp_email(user.email, otp, user.name)
-        maybe_flash_dev_otp(user, email_sent, email_error)
-        flash("A new OTP has been sent to your email.", "success")
+        if not email_sent:
+            flash(f"OTP email send failed: {email_error}", "error")
+        else:
+            flash("A new OTP has been sent to your email.", "success")
     return redirect(url_for("verify_otp"))
 
 
