@@ -11,6 +11,7 @@ from flask import (
     url_for,
     flash,
     request,
+    session,
 )
 from flask_login import (
     LoginManager,
@@ -204,7 +205,8 @@ def login():
                 email_sent, email_error = send_otp_email(user.email, otp, user.name)
                 maybe_flash_dev_otp(user, email_sent, email_error)
                 flash("Please verify your email first. A new OTP has been sent.", "error")
-                return redirect(url_for("verify_otp", email=user.email))
+                session["pending_email"] = user.email
+            return redirect(url_for("verify_otp"))
             login_user(user)
             flash("Welcome back to Shoes!", "success")
             return redirect(next_url if next_url else url_for("home"))
@@ -238,7 +240,8 @@ def register():
             email_sent, email_error = send_otp_email(user.email, otp, user.name)
             maybe_flash_dev_otp(user, email_sent, email_error)
             flash("Registration successful! Check your email for the OTP code.", "success")
-            return redirect(url_for("verify_otp", email=user.email))
+            session["pending_email"] = user.email
+            return redirect(url_for("verify_otp"))
     return render_template("register.html", form=form, next_url=next_url)
 
 
@@ -570,29 +573,72 @@ def rate_order(order_id):
 
 @app.route("/verify-otp", methods=["GET", "POST"])
 def verify_otp():
-    email = request.args.get("email") or request.form.get("email", "")
-    user = User.query.filter_by(email=email.strip().lower()).first()
+    # Get email from session first, fallback to args/form
+    email = (
+        session.get("pending_email")
+        or request.args.get("email", "")
+        or request.form.get("email", "")
+    ).strip().lower()
+
+    if not email:
+        flash("Verification session expired. Please register again.", "error")
+        return redirect(url_for("register"))
+
+    user = User.query.filter_by(email=email).first()
     if not user:
         flash("Invalid verification link.", "error")
         return redirect(url_for("register"))
     if user.is_verified:
+        session.pop("pending_email", None)
         flash("Email already verified. Please log in.", "success")
         return redirect(url_for("login"))
+
+    # Store in session so POST doesn't lose it
+    session["pending_email"] = email
+
     if request.method == "POST":
         entered = request.form.get("otp", "").strip()
-        if not user.otp_expiry or datetime.utcnow() > user.otp_expiry:
+        saved = (user.otp_code or "").strip()
+
+        print("VERIFY EMAIL:", email)
+        print("ENTERED OTP:", repr(entered))
+        print("SAVED OTP:", repr(saved))
+
+        if not saved or not user.otp_expiry:
+            flash("OTP not found. Please request a new one.", "error")
+        elif datetime.utcnow() > user.otp_expiry:
             flash("OTP has expired. Please request a new one.", "error")
-        elif entered != user.otp_code:
+        elif entered != saved:
             flash("Incorrect OTP. Please try again.", "error")
         else:
             user.is_verified = True
             user.otp_code = None
             user.otp_expiry = None
             db.session.commit()
-            login_user(user)
-            flash("Email verified! Welcome to Shoes! 🎉", "success")
-            return redirect(url_for("home"))
+            session.pop("pending_email", None)
+            flash("Email verified! You can now log in.", "success")
+            return redirect(url_for("login"))
+
     return render_template("verify_otp.html", email=email)
+
+
+@app.route("/resend-otp", methods=["POST"])
+def resend_otp():
+    email = (
+        session.get("pending_email")
+        or request.form.get("email", "")
+    ).strip().lower()
+    user = User.query.filter_by(email=email).first()
+    if user and not user.is_verified:
+        otp = str(random.randint(100000, 999999))
+        user.otp_code = otp
+        user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+        db.session.commit()
+        session["pending_email"] = email
+        email_sent, email_error = send_otp_email(user.email, otp, user.name)
+        maybe_flash_dev_otp(user, email_sent, email_error)
+        flash("A new OTP has been sent to your email.", "success")
+    return redirect(url_for("verify_otp"))
 
 
 @app.route("/resend-otp", methods=["POST"])

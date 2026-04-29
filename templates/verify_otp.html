@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<div style="min-height:70vh; display:flex; align-items:center; justify-content:center; padding:32px 16px;">
+<div style="min-height:70vh; display:flex; align-items:center; justify-content:center; padding:48px 16px;">
   <div style="width:100%; max-width:420px;">
     <div class="page-card" style="padding:36px 32px; text-align:center;">
 
@@ -11,18 +11,19 @@
         We sent a 6-digit OTP to <strong>{{ email }}</strong>.<br>Enter it below to activate your account.
       </p>
 
-      <form method="post">
+      <form method="post" action="{{ url_for('verify_otp') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="hidden" name="email" value="{{ email }}">
         <input
           type="text"
           name="otp"
           maxlength="6"
-          placeholder="Enter 6-digit OTP"
+          placeholder="000000"
           required
           autofocus
-          style="width:100%; padding:16px; text-align:center; font-size:1.8rem; font-weight:800; letter-spacing:0.3em; border:2px solid #E5E7EB; border-radius:14px; outline:none; margin-bottom:16px; font-family:inherit;"
-          oninput="this.style.borderColor=this.value.length===6?'#22c55e':'#E5E7EB'"
+          autocomplete="one-time-code"
+          inputmode="numeric"
+          style="width:100%; padding:16px; text-align:center; font-size:2rem; font-weight:800; letter-spacing:0.4em; border:2px solid #E5E7EB; border-radius:14px; outline:none; margin-bottom:16px; font-family:inherit;"
+          oninput="this.value=this.value.replace(/[^0-9]/g,''); this.style.borderColor=this.value.length===6?'#22c55e':'#E5E7EB'"
         >
         <button type="submit" class="btn" style="width:100%; padding:14px; border-radius:999px; font-size:1rem;">
           Verify OTP
@@ -31,7 +32,6 @@
 
       <form method="post" action="{{ url_for('resend_otp') }}" style="margin-top:16px;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="hidden" name="email" value="{{ email }}">
         <p style="color:var(--muted); font-size:0.85rem; margin:0 0 8px;">Didn't receive the code?</p>
         <button type="submit" style="background:none; border:none; color:#F59E0B; font-weight:700; font-size:0.88rem; cursor:pointer; text-decoration:underline;">
           Resend OTP
