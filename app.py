@@ -42,8 +42,8 @@ from models import db, User, Product, CartItem, Order, OrderItem, Notification, 
 load_dotenv(override=False)
 
 def send_otp_email(to_email, otp, name):
-    gmail_user = os.getenv("GMAIL_USER")
-    gmail_pass = os.getenv("GMAIL_APP_PASSWORD")
+    gmail_user = os.getenv("GMAIL_USER") or os.getenv("gmail_user")
+    gmail_pass = os.getenv("GMAIL_APP_PASSWORD") or os.getenv("gmail_app_password")
     if not gmail_user or not gmail_pass:
         print(f"[OTP] Email not configured. OTP for {to_email}: {otp}")
         return False, "Email service is not configured"
