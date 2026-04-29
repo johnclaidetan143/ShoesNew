@@ -663,28 +663,6 @@ def resend_otp():
     return redirect(url_for("verify_otp", email=email))
 
 
-@app.route("/resend-otp", methods=["POST"])
-def resend_otp():
-    email = (
-        session.get("pending_email")
-        or request.form.get("email", "")
-    ).strip().lower()
-    user = User.query.filter_by(email=email).first()
-    if user and not user.is_verified:
-        otp = str(random.randint(100000, 999999))
-        user.otp_code = otp
-        user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
-        db.session.commit()
-        session["pending_email"] = email
-        email_sent, email_error = send_otp_email(user.email, otp, user.name)
-        maybe_flash_dev_otp(user, email_sent, email_error)
-        flash("A new OTP has been sent to your email.", "success")
-    return redirect(url_for("verify_otp"))
-
-
-
-
-
 @app.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
