@@ -43,30 +43,48 @@ from models import db, User, Product, CartItem, Order, OrderItem, Notification, 
 load_dotenv(override=False)
 
 def send_otp_email(to_email, otp, name):
-    gmail_user = os.getenv("GMAIL_USER") or os.getenv("gmail_user")
-    gmail_pass = os.getenv("GMAIL_APP_PASSWORD") or os.getenv("gmail_app_password")
+    gmail_user = os.getenv("GMAIL_USER", "").strip()
+    gmail_pass = os.getenv("GMAIL_APP_PASSWORD", "").strip()
+
+    print(f"[OTP] Sending to: {to_email}")
+    print(f"[OTP] GMAIL_USER configured: {'yes' if gmail_user else 'NO - missing'}")
+    print(f"[OTP] GMAIL_APP_PASSWORD configured: {'yes' if gmail_pass else 'NO - missing'}")
+
     if not gmail_user or not gmail_pass:
-        print(f"[OTP] Email not configured. OTP for {to_email}: {otp}")
-        return False, "Email service is not configured"
+        print(f"[OTP] FALLBACK - OTP for {to_email} is: {otp}")
+        return False, "GMAIL_USER or GMAIL_APP_PASSWORD not set in environment variables"
+
     body = (
         f"Hi {name},\n\n"
         f"Your verification code for Shoes is:\n\n"
         f"    {otp}\n\n"
-        f"This code expires in 10 minutes. Do not share it with anyone.\n\n"
+        f"This code expires in 10 minutes.\n"
+        f"Do not share it with anyone.\n\n"
         f"-- Shoes Team"
     )
-    msg = MIMEText(body)
+    msg = MIMEText(body, "plain", "utf-8")
     msg["Subject"] = "Your OTP Verification Code - Shoes"
     msg["From"] = gmail_user
     msg["To"] = to_email
+
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
             server.login(gmail_user, gmail_pass)
             server.sendmail(gmail_user, to_email, msg.as_string())
+        print(f"[OTP] Successfully sent to {to_email}")
         return True, ""
+    except smtplib.SMTPAuthenticationError:
+        err = "Gmail authentication failed. Check GMAIL_APP_PASSWORD."
+        print(f"[OTP] ERROR: {err}")
+        return False, err
     except Exception as e:
-        print(f"[OTP] Failed to send email: {e}")
+        print(f"[OTP] ERROR sending to {to_email}: {e}")
         return False, str(e)
+
+
+def maybe_flash_dev_otp(user, email_sent, error_message):
+    if not email_sent:
+        flash(f"Email could not be sent ({error_message}). Your OTP is: {user.otp_code}", "warning")
 
 def maybe_flash_dev_otp(user, email_sent, error_message):
     is_dev = app.debug or os.getenv("FLASK_ENV", "").lower() == "development"
