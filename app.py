@@ -46,7 +46,7 @@ def send_otp_email(to_email, otp, name):
     gmail_pass = os.getenv("GMAIL_APP_PASSWORD")
     if not gmail_user or not gmail_pass:
         print(f"[OTP] Email not configured. OTP for {to_email}: {otp}")
-        return
+        return False, "Email service is not configured"
     body = f"""Hi {name},
 
 Your verification code for Shoes is:
@@ -64,8 +64,19 @@ This code expires in 10 minutes. Do not share it with anyone.
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(gmail_user, gmail_pass)
             server.sendmail(gmail_user, to_email, msg.as_string())
+        return True, ""
     except Exception as e:
         print(f"[OTP] Failed to send email: {e}")
+        return False, str(e)
+
+
+def maybe_flash_dev_otp(user, email_sent, error_message):
+    is_dev = app.debug or os.getenv("FLASK_ENV", "").lower() == "development"
+    if not email_sent and is_dev:
+        flash(
+            f"DEV OTP fallback: {user.otp_code} (email failed: {error_message})",
+            "warning",
+        )
 
 
 app = Flask(__name__)
@@ -193,7 +204,8 @@ def login():
                 user.otp_code = otp
                 user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
                 db.session.commit()
-                send_otp_email(user.email, otp, user.name)
+                email_sent, email_error = send_otp_email(user.email, otp, user.name)
+                maybe_flash_dev_otp(user, email_sent, email_error)
                 flash("Please verify your email first. A new OTP has been sent.", "error")
                 return redirect(url_for("verify_otp", email=user.email))
             login_user(user)
@@ -226,7 +238,8 @@ def register():
             user.set_password(form.password.data)
             db.session.add(user)
             db.session.commit()
-            send_otp_email(user.email, otp, user.name)
+            email_sent, email_error = send_otp_email(user.email, otp, user.name)
+            maybe_flash_dev_otp(user, email_sent, email_error)
             flash("Registration successful! Check your email for the OTP code.", "success")
             return redirect(url_for("verify_otp", email=user.email))
     return render_template("register.html", form=form, next_url=next_url)
@@ -594,7 +607,8 @@ def resend_otp():
         user.otp_code = otp
         user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
         db.session.commit()
-        send_otp_email(user.email, otp, user.name)
+        email_sent, email_error = send_otp_email(user.email, otp, user.name)
+        maybe_flash_dev_otp(user, email_sent, email_error)
         flash("A new OTP has been sent to your email.", "success")
     return redirect(url_for("verify_otp", email=email))
 
