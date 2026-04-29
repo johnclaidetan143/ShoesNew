@@ -153,6 +153,19 @@ def _seed_db():
 def create_tables():
     try:
         db.create_all()
+        # Add missing OTP columns if they don't exist (safe migration)
+        with db.engine.connect() as conn:
+            for col, typedef in [
+                ("is_verified", "BOOLEAN DEFAULT 0"),
+                ("otp_code", "VARCHAR(6)"),
+                ("otp_expiry", "DATETIME"),
+            ]:
+                try:
+                    conn.execute(db.text(f"ALTER TABLE users ADD COLUMN {col} {typedef}"))
+                    conn.commit()
+                    print(f"[MIGRATE] Added column: {col}")
+                except Exception:
+                    pass  # Column already exists
         _seed_db()
     except Exception as e:
         print(f"[STARTUP] DB init error (non-fatal): {e}")
@@ -635,15 +648,20 @@ def verify_otp():
         elif entered != saved:
             flash("Incorrect OTP. Please try again.", "error")
         else:
-            user.is_verified = True
-            user.otp_code = None
-            user.otp_expiry = None
-            db.session.commit()
-            session.pop("pending_email", None)
-            login_user(user)
-            print(f"[VERIFY] SUCCESS - logged in {email}")
-            flash("Email verified! Welcome to Shoes! 🎉", "success")
-            return redirect(url_for("home"))
+            try:
+                user.is_verified = True
+                user.otp_code = None
+                user.otp_expiry = None
+                db.session.commit()
+                session.pop("pending_email", None)
+                login_user(user)
+                print(f"[VERIFY] SUCCESS - logged in {email}")
+                flash("Email verified! Welcome to Shoes!", "success")
+                return redirect(url_for("home"))
+            except Exception as e:
+                db.session.rollback()
+                print(f"[VERIFY] ERROR: {e}")
+                flash(f"Verification error: {str(e)}", "error")
 
     return render_template("verify_otp.html", email=email)
 
