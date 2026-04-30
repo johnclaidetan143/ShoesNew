@@ -862,6 +862,36 @@ def admin_contact_read(msg_id):
     return redirect(url_for("admin_contacts"))
 
 
+
+@app.route("/admin/contacts/<int:msg_id>/reply", methods=["POST"])
+@login_required
+def admin_contact_reply(msg_id):
+    denied = require_admin_access()
+    if denied:
+        return denied
+    msg = ContactMessage.query.get_or_404(msg_id)
+    reply_message = request.form.get("reply_message", "").strip()
+    if not reply_message:
+        flash("Reply message cannot be empty.", "error")
+        return redirect(url_for("admin_contacts"))
+    body = (
+        f"Hi {msg.name},\n\n"
+        f"{reply_message}\n\n"
+        f"---\n"
+        f"This is a reply to your message:\n"
+        f"Subject: {msg.subject}\n"
+        f"Your message: {msg.message}\n\n"
+        f"-- Shoes Team"
+    )
+    sent = _send_email(msg.email, f"Re: {msg.subject} - Shoes", body)
+    if sent:
+        msg.is_read = True
+        db.session.commit()
+        flash(f"Reply sent to {msg.name} ({msg.email}).", "success")
+    else:
+        flash("Failed to send reply. Check Gmail credentials.", "error")
+    return redirect(url_for("admin_contacts"))
+
 @app.route("/admin/contacts/<int:msg_id>/delete", methods=["POST"])
 @login_required
 def admin_contact_delete(msg_id):
