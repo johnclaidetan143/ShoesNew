@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div style="max-width:680px; margin:0 auto; padding:32px 0;">
+  <div class="page-card" style="padding:40px 36px;">
+
+    <div style="text-align:center; margin-bottom:32px;">
+      <div style="font-size:3rem; margin-bottom:12px;">📬</div>
+      <h1 style="margin:0 0 8px; font-size:1.6rem; font-weight:900;">Contact Us</h1>
+      <p style="margin:0; color:var(--muted); font-size:0.9rem; line-height:1.6;">
+        Have a question or concern? We'd love to hear from you. Fill out the form below and we'll get back to you as soon as possible.
+      </p>
+    </div>
+
+    {% if sent %}
+    <div class="flash success" style="text-align:center; font-size:1rem;">
+      ✅ Your message has been sent! We'll get back to you soon.
+    </div>
+    {% else %}
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="input-group">
+        <label class="field-label">Your Name</label>
+        <input type="text" name="name" class="input-field" placeholder="John Doe" required
+          value="{{ current_user.name if current_user.is_authenticated else '' }}">
+      </div>
+
+      <div class="input-group">
+        <label class="field-label">Email Address</label>
+        <input type="email" name="email" class="input-field" placeholder="you@example.com" required
+          value="{{ current_user.email if current_user.is_authenticated else '' }}">
+      </div>
+
+      <div class="input-group">
+        <label class="field-label">Subject</label>
+        <select name="subject" class="input-field" required>
+          <option value="" disabled selected>Select a subject</option>
+          <option value="Order Issue">Order Issue</option>
+          <option value="Product Inquiry">Product Inquiry</option>
+          <option value="Return / Refund">Return / Refund</option>
+          <option value="Delivery Problem">Delivery Problem</option>
+          <option value="Account Help">Account Help</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label class="field-label">Message</label>
+        <textarea name="message" class="text-area" placeholder="Describe your concern in detail..." required style="min-height:140px;"></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn" style="width:100%; padding:14px; border-radius:999px; font-size:1rem;">
+          📨 Send Message
+        </button>
+      </div>
+    </form>
+    {% endif %}
+
+    <!-- Contact Info -->
+    <div style="margin-top:32px; padding-top:24px; border-top:1px solid #F3F4F6; display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; text-align:center;">
+      <div>
+        <div style="font-size:1.5rem; margin-bottom:6px;">📧</div>
+        <div style="font-size:0.78rem; font-weight:700; color:var(--primary); margin-bottom:2px;">Email</div>
+        <div style="font-size:0.78rem; color:var(--muted);">Johnclaidetan123@gmail.com</div>
+      </div>
+      <div>
+        <div style="font-size:1.5rem; margin-bottom:6px;">📍</div>
+        <div style="font-size:0.78rem; font-weight:700; color:var(--primary); margin-bottom:2px;">Location</div>
+        <div style="font-size:0.78rem; color:var(--muted);">Barili, Cebu, Philippines</div>
+      </div>
+      <div>
+        <div style="font-size:1.5rem; margin-bottom:6px;">🕐</div>
+        <div style="font-size:0.78rem; font-weight:700; color:var(--primary); margin-bottom:2px;">Hours</div>
+        <div style="font-size:0.78rem; color:var(--muted);">Mon–Sat, 9AM–6PM</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

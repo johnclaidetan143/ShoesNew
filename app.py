@@ -810,6 +810,29 @@ def community_rules():
     return render_template("community_rules.html")
 
 
+
+@app.route("/contact", methods=["GET", "POST"])
+def contact():
+    sent = False
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip()
+        subject = request.form.get("subject", "").strip()
+        message = request.form.get("message", "").strip()
+        if name and email and subject and message:
+            body = (
+                f"New contact message from Shoes website:\n\n"
+                f"Name: {name}\n"
+                f"Email: {email}\n"
+                f"Subject: {subject}\n\n"
+                f"Message:\n{message}"
+            )
+            _send_email(os.getenv("GMAIL_USER", ""), f"[Shoes Contact] {subject}", body)
+            sent = True
+        else:
+            flash("Please fill in all fields.", "error")
+    return render_template("contact.html", sent=sent)
+
 @app.route("/about")
 def about():
     return render_template("about.html")
