@@ -611,6 +611,23 @@ def checkout():
             )
             db.session.add(notification)
             db.session.commit()
+            # Send order confirmation email
+            try:
+                items_text = "\n".join(
+                    f"  - {oi.product.name} x{oi.quantity} = \u20b1{oi.line_total():.2f}"
+                    for oi in order.items
+                )
+                body = (
+                    f"Hi {current_user.name},\n\n"
+                    f"Your order #{order.id} has been placed successfully!\n\n"
+                    f"Items:\n{items_text}\n\n"
+                    f"Total: \u20b1{order.total:.2f}\n"
+                    f"Status: {order.status}\n\n"
+                    f"Thank you for shopping at Shoes!\n\n-- Shoes Team"
+                )
+                _send_email(current_user.email, f"Order #{order.id} Confirmed - Shoes", body)
+            except Exception as e:
+                print(f"[ORDER EMAIL] Failed: {e}")
             flash("Your order has been placed successfully!", "success")
             return redirect(url_for("order_success"))
         except Exception:
@@ -923,6 +940,14 @@ def admin_order_status(order_id):
         )
     )
     db.session.commit()
+    try:
+        _send_email(
+            order.user.email,
+            f"Order #{order.id} Update - Shoes",
+            f"Hi {order.user.name},\n\nYour order #{order.id} status has been updated to: {new_status}\n\nThank you for shopping at Shoes!\n\n-- Shoes Team"
+        )
+    except Exception as e:
+        print(f"[STATUS EMAIL] Failed: {e}")
     flash(f"Order #{order.id} updated to {new_status}.", "success")
     return redirect(url_for("admin_orders"))
 
