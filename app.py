@@ -188,12 +188,15 @@ def load_user(user_id):
 def inject_common_data():
     cart_count = 0
     if current_user.is_authenticated:
-        cart_count = (
-            db.session.query(db.func.coalesce(db.func.sum(CartItem.quantity), 0))
-            .filter(CartItem.user_id == current_user.id)
-            .scalar()
-            or 0
-        )
+        try:
+            cart_count = (
+                db.session.query(db.func.coalesce(db.func.sum(CartItem.quantity), 0))
+                .filter(CartItem.user_id == current_user.id)
+                .scalar()
+                or 0
+            )
+        except Exception:
+            cart_count = 0
     return {
         "categories": CATEGORIES,
         "cart_count": cart_count,
@@ -304,7 +307,11 @@ def home():
         products = products.order_by(Product.price.desc())
     else:
         products = products.order_by(Product.created_at.desc())
-    products = products.all()
+    try:
+        products = products.all()
+    except Exception as e:
+        print(f"[HOME] DB error: {e}")
+        products = []
     search_form = SearchForm(query=search_query)
     return render_template(
         "shop.html",
