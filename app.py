@@ -635,15 +635,20 @@ def verify_otp():
         elif entered != saved:
             flash("Incorrect OTP. Please try again.", "error")
         else:
-            user.is_verified = True
-            user.otp_code = None
-            user.otp_expiry = None
-            db.session.commit()
-            session.pop("pending_email", None)
-            login_user(user)
-            print(f"[VERIFY] SUCCESS - logged in {email}")
-            flash("Email verified! Welcome to Shoes! 🎉", "success")
-            return redirect(url_for("home"))
+            try:
+                user.is_verified = True
+                user.otp_code = None
+                user.otp_expiry = None
+                db.session.commit()
+                session.pop("pending_email", None)
+                login_user(user)
+                print(f"[VERIFY] SUCCESS - logged in {email}")
+                flash("Email verified! Welcome to Shoes!", "success")
+                return redirect(url_for("home"))
+            except Exception as e:
+                db.session.rollback()
+                print(f"[VERIFY] ERROR on commit: {e}")
+                flash("Verification failed. Please try again.", "error")
 
     return render_template("verify_otp.html", email=email)
 
