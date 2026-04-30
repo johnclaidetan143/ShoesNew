@@ -153,6 +153,18 @@ def _seed_db():
 def create_tables():
     try:
         db.create_all()
+        # Ensure OTP columns exist (safe migration for Vercel)
+        with db.engine.connect() as conn:
+            for col, typedef in [
+                ("is_verified", "BOOLEAN DEFAULT 0"),
+                ("otp_code", "VARCHAR(6)"),
+                ("otp_expiry", "DATETIME"),
+            ]:
+                try:
+                    conn.execute(db.text(f"ALTER TABLE users ADD COLUMN {col} {typedef}"))
+                    conn.commit()
+                except Exception:
+                    pass  # Column already exists
         _seed_db()
     except Exception as e:
         print(f"[STARTUP] DB init error: {e}")
