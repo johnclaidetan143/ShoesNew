@@ -819,7 +819,8 @@ def contact():
         if name and email and subject and message:
             # Save to DB
             try:
-                msg = ContactMessage(name=name, email=email, subject=subject, message=message)
+                user_id = current_user.id if current_user.is_authenticated else None
+                msg = ContactMessage(name=name, email=email, subject=subject, message=message, user_id=user_id)
                 db.session.add(msg)
                 db.session.commit()
             except Exception as e:
@@ -837,7 +838,16 @@ def contact():
             sent = True
         else:
             flash("Please fill in all fields.", "error")
-    return render_template("contact.html", sent=sent)
+    # Show user's previous messages and replies
+    user_messages = []
+    if current_user.is_authenticated:
+        user_messages = ContactMessage.query.filter_by(
+            user_id=current_user.id
+        ).order_by(ContactMessage.created_at.desc()).all()
+    elif sent:
+        # guest - just show sent confirmation
+        pass
+    return render_template("contact.html", sent=sent, user_messages=user_messages)
 
 @app.route("/admin/contacts")
 @login_required

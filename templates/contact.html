@@ -80,4 +80,29 @@
   </div>
 </div>
 
+{% if user_messages %}
+<div style="max-width:680px; margin:24px auto 0;">
+  <div class="page-card" style="padding:28px 36px;">
+    <h3 style="margin:0 0 16px; font-size:1rem; font-weight:800;">📨 Your Message History</h3>
+    {% for m in user_messages %}
+    <div style="border:1px solid #E5E7EB; border-radius:14px; padding:16px; margin-bottom:12px; background:#FAFAFA;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span style="font-weight:700; font-size:0.88rem;">{{ m.subject }}</span>
+        <span style="font-size:0.75rem; color:var(--muted);">{{ m.created_at.strftime('%b %d, %Y') }}</span>
+      </div>
+      <p style="margin:0 0 10px; font-size:0.85rem; color:#374151; line-height:1.6;">{{ m.message }}</p>
+      {% if m.admin_reply %}
+      <div style="background:#EFF6FF; border-left:3px solid #3B82F6; border-radius:0 10px 10px 0; padding:12px 14px; margin-top:8px;">
+        <div style="font-size:0.75rem; font-weight:700; color:#1D4ED8; margin-bottom:4px;">💬 Admin Reply · {{ m.replied_at.strftime('%b %d, %Y') if m.replied_at }}</div>
+        <p style="margin:0; font-size:0.85rem; color:#1E3A5F; line-height:1.6;">{{ m.admin_reply }}</p>
+      </div>
+      {% else %}
+      <div style="font-size:0.75rem; color:var(--muted); margin-top:6px;">⏳ Awaiting reply...</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
 {% endblock %}
