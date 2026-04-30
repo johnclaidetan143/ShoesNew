@@ -151,8 +151,11 @@ def _seed_db():
 
 @app.before_request
 def create_tables():
-    db.create_all()
-    _seed_db()
+    try:
+        db.create_all()
+        _seed_db()
+    except Exception as e:
+        print(f"[STARTUP] DB init error: {e}")
 
 csrf = CSRFProtect(app)
 login_manager = LoginManager(app)
@@ -284,7 +287,11 @@ def home():
         products = products.order_by(Product.price.desc())
     else:
         products = products.order_by(Product.created_at.desc())
-    products = products.all()
+    try:
+        products = products.all()
+    except Exception as e:
+        print(f"[HOME] DB error: {e}")
+        products = []
     search_form = SearchForm(query=search_query)
     return render_template(
         "shop.html",
