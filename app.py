@@ -199,8 +199,27 @@ def register():
             user.set_password(form.password.data)
             db.session.add(user)
             db.session.commit()
-            flash("Registration successful. Please log in to continue.", "success")
-            return redirect(url_for("login", next=next_url) if next_url else url_for("login"))
+            otp = str(random.randint(100000, 999999))
+            try:
+                user.otp_code = otp
+                user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+                user.is_verified = False
+                db.session.commit()
+            except Exception as e:
+                print(f"[REGISTER] OTP save error: {e}")
+                db.session.rollback()
+            sent = _send_email(
+                user.email,
+                "Your Verification Code - Shoes",
+                f"Hi {user.name},\n\nYour verification code is: {otp}\n\nExpires in 10 minutes.\n\n-- Shoes Team"
+            )
+            if sent:
+                flash("Account created! Check your email for the verification code.", "success")
+            else:
+                flash(f"Account created! Your OTP is: {otp}", "warning")
+            session["pending_email"] = user.email
+            session.permanent = True
+            return redirect(url_for("verify_otp", email=user.email))
     return render_template("register.html", form=form, next_url=next_url)
 
 
