@@ -1,5 +1,8 @@
 import os
-from datetime import datetime
+import random
+import smtplib
+from email.mime.text import MIMEText
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from flask import (
     Flask,
@@ -8,6 +11,7 @@ from flask import (
     url_for,
     flash,
     request,
+    session,
 )
 from flask_login import (
     LoginManager,
@@ -37,6 +41,27 @@ from models import db, User, Product, CartItem, Order, OrderItem, Notification, 
 
 
 load_dotenv(override=False)
+
+def _send_email(to_email, subject, body):
+    gmail_user = os.getenv("GMAIL_USER", "").strip()
+    gmail_pass = os.getenv("GMAIL_APP_PASSWORD", "").strip()
+    if not gmail_user or not gmail_pass:
+        print(f"[EMAIL] Not configured. Content: {body}")
+        return False
+    msg = MIMEText(body, "plain", "utf-8")
+    msg["Subject"] = subject
+    msg["From"] = gmail_user
+    msg["To"] = to_email
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as s:
+            s.login(gmail_user, gmail_pass)
+            s.sendmail(gmail_user, to_email, msg.as_string())
+        print(f"[EMAIL] Sent to {to_email}")
+        return True
+    except Exception as e:
+        print(f"[EMAIL] Failed: {e}")
+        return False
+
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dreamshoe-secret")
@@ -177,6 +202,135 @@ def register():
             flash("Registration successful. Please log in to continue.", "success")
             return redirect(url_for("login", next=next_url) if next_url else url_for("login"))
     return render_template("register.html", form=form, next_url=next_url)
+
+
+@app.route("/verify-otp", methods=["GET", "POST"])
+def verify_otp():
+    email = (session.get("pending_email") or request.args.get("email","") or request.form.get("email","")).strip().lower()
+    if not email:
+        flash("Session expired. Please register again.", "error")
+        return redirect(url_for("register"))
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        flash("Account not found.", "error")
+        return redirect(url_for("register"))
+    try:
+        if user.is_verified:
+            session.pop("pending_email", None)
+            login_user(user)
+            return redirect(url_for("home"))
+    except Exception:
+        pass
+    session["pending_email"] = email
+    session.permanent = True
+    if request.method == "POST":
+        entered = request.form.get("otp","").strip()
+        try:
+            saved = (user.otp_code or "").strip()
+            expiry = user.otp_expiry
+        except Exception:
+            saved, expiry = "", None
+        print(f"[OTP] entered={entered!r} saved={saved!r}")
+        if not saved or not expiry:
+            flash("OTP not found. Click Resend.", "error")
+        elif datetime.utcnow() > expiry:
+            flash("OTP expired. Click Resend.", "error")
+        elif entered != saved:
+            flash("Incorrect OTP. Try again.", "error")
+        else:
+            try:
+                user.is_verified = True
+                user.otp_code = None
+                user.otp_expiry = None
+                db.session.commit()
+            except Exception as e:
+                print(f"[OTP] DB error: {e}")
+                db.session.rollback()
+            session.pop("pending_email", None)
+            login_user(user)
+            flash("Email verified! Welcome to Shoes!", "success")
+            return redirect(url_for("home"))
+    return render_template("verify_otp.html", email=email)
+
+
+@app.route("/resend-otp", methods=["POST"])
+def resend_otp():
+    email = (session.get("pending_email") or request.form.get("email","")).strip().lower()
+    user = User.query.filter_by(email=email).first()
+    if user:
+        otp = str(random.randint(100000, 999999))
+        try:
+            user.otp_code = otp
+            user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+        sent = _send_email(user.email, "Your New OTP - Shoes", f"Your new OTP is: {otp}\n\nExpires in 10 minutes.")
+        flash(f"New OTP sent!" if sent else f"OTP: {otp} (email failed)", "success" if sent else "warning")
+    return redirect(url_for("verify_otp", email=email))
+
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "POST":
+        email = request.form.get("email","").strip().lower()
+        user = User.query.filter_by(email=email).first()
+        if user:
+            otp = str(random.randint(100000, 999999))
+            try:
+                user.otp_code = otp
+                user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+            sent = _send_email(user.email, "Password Reset Code - Shoes", f"Hi {user.name},\n\nYour password reset code is: {otp}\n\nExpires in 10 minutes.\n\n-- Shoes Team")
+            flash("Reset code sent to your email." if sent else f"Reset code: {otp} (email failed)", "success" if sent else "warning")
+            session["reset_email"] = email
+            session.permanent = True
+            return redirect(url_for("reset_password"))
+        flash("If that email exists, a reset code was sent.", "success")
+    return render_template("forgot_password.html")
+
+
+@app.route("/reset-password", methods=["GET", "POST"])
+def reset_password():
+    email = (session.get("reset_email") or request.args.get("email","")).strip().lower()
+    if not email:
+        return redirect(url_for("forgot_password"))
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return redirect(url_for("forgot_password"))
+    if request.method == "POST":
+        entered = request.form.get("otp","").strip()
+        new_pw = request.form.get("password","").strip()
+        confirm_pw = request.form.get("confirm_password","").strip()
+        try:
+            saved = (user.otp_code or "").strip()
+            expiry = user.otp_expiry
+        except Exception:
+            saved, expiry = "", None
+        if not saved or not expiry:
+            flash("Code not found. Request a new one.", "error")
+        elif datetime.utcnow() > expiry:
+            flash("Code expired. Request a new one.", "error")
+        elif entered != saved:
+            flash("Incorrect code. Try again.", "error")
+        elif len(new_pw) < 6:
+            flash("Password must be at least 6 characters.", "error")
+        elif new_pw != confirm_pw:
+            flash("Passwords do not match.", "error")
+        else:
+            user.set_password(new_pw)
+            try:
+                user.otp_code = None
+                user.otp_expiry = None
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+            session.pop("reset_email", None)
+            flash("Password reset! Please log in.", "success")
+            return redirect(url_for("login"))
+    return render_template("reset_password.html", email=email)
 
 
 @app.route("/logout")
