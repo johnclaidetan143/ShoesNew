@@ -37,7 +37,7 @@ from forms import (
     PrivacyForm,
     ProductForm,
 )
-from models import db, User, Product, CartItem, Order, OrderItem, Notification, Rating
+from models import db, User, Product, CartItem, Order, OrderItem, Notification, Rating, ContactMessage
 
 
 load_dotenv(override=False)
@@ -820,6 +820,15 @@ def contact():
         subject = request.form.get("subject", "").strip()
         message = request.form.get("message", "").strip()
         if name and email and subject and message:
+            # Save to DB
+            try:
+                msg = ContactMessage(name=name, email=email, subject=subject, message=message)
+                db.session.add(msg)
+                db.session.commit()
+            except Exception as e:
+                print(f"[CONTACT] DB error: {e}")
+                db.session.rollback()
+            # Send email notification to admin
             body = (
                 f"New contact message from Shoes website:\n\n"
                 f"Name: {name}\n"
@@ -832,6 +841,42 @@ def contact():
         else:
             flash("Please fill in all fields.", "error")
     return render_template("contact.html", sent=sent)
+
+@app.route("/admin/contacts")
+@login_required
+def admin_contacts():
+    denied = require_admin_access()
+    if denied:
+        return denied
+    messages = ContactMessage.query.order_by(ContactMessage.created_at.desc()).all()
+    unread = ContactMessage.query.filter_by(is_read=False).count()
+    return render_template("admin/contacts.html", title="Contact Messages", messages=messages, unread=unread)
+
+
+@app.route("/admin/contacts/<int:msg_id>/read", methods=["POST"])
+@login_required
+def admin_contact_read(msg_id):
+    denied = require_admin_access()
+    if denied:
+        return denied
+    msg = ContactMessage.query.get_or_404(msg_id)
+    msg.is_read = True
+    db.session.commit()
+    return redirect(url_for("admin_contacts"))
+
+
+@app.route("/admin/contacts/<int:msg_id>/delete", methods=["POST"])
+@login_required
+def admin_contact_delete(msg_id):
+    denied = require_admin_access()
+    if denied:
+        return denied
+    msg = ContactMessage.query.get_or_404(msg_id)
+    db.session.delete(msg)
+    db.session.commit()
+    flash("Message deleted.", "success")
+    return redirect(url_for("admin_contacts"))
+
 
 @app.route("/about")
 def about():

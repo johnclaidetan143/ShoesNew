@@ -102,6 +102,10 @@
     <a href="{{ url_for('admin_users') }}" class="nav-item {{ 'active' if 'user' in request.endpoint }}">
       <span>👥</span> Users
     </a>
+    <a href="{{ url_for('admin_contacts') }}" class="nav-item {{ 'active' if request.endpoint == 'admin_contacts' }}">
+      <span>📬</span> Messages
+      {% set unread_count = namespace(n=0) %}
+    </a>
     <div class="nav-label" style="margin-top:8px;">Store</div>
     <a href="{{ url_for('home') }}" class="nav-item" target="_blank">
       <span>🛍️</span> View Shop
