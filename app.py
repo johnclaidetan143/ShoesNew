@@ -601,7 +601,6 @@ def checkout():
                     quantity=item.quantity,
                     price=item.product.price,
                 )
-                item.product.stock -= item.quantity
                 db.session.add(order_item)
             for item in items:
                 db.session.delete(item)
@@ -663,8 +662,6 @@ def cancel_order(order_id):
     if order.status.lower() not in {"pending", "processing"}:
         flash("Only pending or processing orders can be cancelled.", "error")
         return redirect(url_for("history"))
-    for item in order.items:
-        item.product.stock += item.quantity
     order.status = "Cancelled"
     db.session.add(Notification(user_id=current_user.id, message=f"Your order #{order.id} has been cancelled."))
     db.session.commit()
@@ -1023,16 +1020,15 @@ def admin_order_status(order_id):
         flash("Order status is already up to date.", "success")
         return redirect(url_for("admin_orders"))
 
-    if new_status == "Cancelled" and old_status != "Cancelled":
-        for item in order.items:
-            item.product.stock += item.quantity
-    elif old_status == "Cancelled" and new_status != "Cancelled":
+    # Decrease stock only when first moving to Processing
+    if new_status == "Processing" and old_status == "Pending":
         for item in order.items:
             if item.product.stock < item.quantity:
-                flash(f"Insufficient stock to restore order #{order.id}.", "error")
+                flash(f"Insufficient stock for order #{order.id}.", "error")
                 return redirect(url_for("admin_orders"))
         for item in order.items:
             item.product.stock -= item.quantity
+            print(f"[STOCK] {item.product.name} stock: {item.product.stock + item.quantity} -> {item.product.stock}")
 
     order.status = new_status
     db.session.add(
