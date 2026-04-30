@@ -151,24 +151,8 @@ def _seed_db():
 
 @app.before_request
 def create_tables():
-    try:
-        db.create_all()
-        # Add missing OTP columns if they don't exist (safe migration)
-        with db.engine.connect() as conn:
-            for col, typedef in [
-                ("is_verified", "BOOLEAN DEFAULT 0"),
-                ("otp_code", "VARCHAR(6)"),
-                ("otp_expiry", "DATETIME"),
-            ]:
-                try:
-                    conn.execute(db.text(f"ALTER TABLE users ADD COLUMN {col} {typedef}"))
-                    conn.commit()
-                    print(f"[MIGRATE] Added column: {col}")
-                except Exception:
-                    pass  # Column already exists
-        _seed_db()
-    except Exception as e:
-        print(f"[STARTUP] DB init error (non-fatal): {e}")
+    db.create_all()
+    _seed_db()
 
 csrf = CSRFProtect(app)
 login_manager = LoginManager(app)
@@ -188,15 +172,12 @@ def load_user(user_id):
 def inject_common_data():
     cart_count = 0
     if current_user.is_authenticated:
-        try:
-            cart_count = (
-                db.session.query(db.func.coalesce(db.func.sum(CartItem.quantity), 0))
-                .filter(CartItem.user_id == current_user.id)
-                .scalar()
-                or 0
-            )
-        except Exception:
-            cart_count = 0
+        cart_count = (
+            db.session.query(db.func.coalesce(db.func.sum(CartItem.quantity), 0))
+            .filter(CartItem.user_id == current_user.id)
+            .scalar()
+            or 0
+        )
     return {
         "categories": CATEGORIES,
         "cart_count": cart_count,
@@ -207,11 +188,7 @@ def inject_common_data():
 @app.route("/")
 def index():
     form = SearchForm()
-    try:
-        trending = Product.query.order_by(Product.created_at.desc()).limit(8).all()
-    except Exception as e:
-        print(f"[INDEX] DB error: {e}")
-        trending = []
+    trending = Product.query.order_by(Product.created_at.desc()).limit(8).all()
     return render_template("index.html", form=form, trending=trending)
 
 
@@ -307,11 +284,7 @@ def home():
         products = products.order_by(Product.price.desc())
     else:
         products = products.order_by(Product.created_at.desc())
-    try:
-        products = products.all()
-    except Exception as e:
-        print(f"[HOME] DB error: {e}")
-        products = []
+    products = products.all()
     search_form = SearchForm(query=search_query)
     return render_template(
         "shop.html",
@@ -655,20 +628,15 @@ def verify_otp():
         elif entered != saved:
             flash("Incorrect OTP. Please try again.", "error")
         else:
-            try:
-                user.is_verified = True
-                user.otp_code = None
-                user.otp_expiry = None
-                db.session.commit()
-                session.pop("pending_email", None)
-                login_user(user)
-                print(f"[VERIFY] SUCCESS - logged in {email}")
-                flash("Email verified! Welcome to Shoes!", "success")
-                return redirect(url_for("home"))
-            except Exception as e:
-                db.session.rollback()
-                print(f"[VERIFY] ERROR: {e}")
-                flash(f"Verification error: {str(e)}", "error")
+            user.is_verified = True
+            user.otp_code = None
+            user.otp_expiry = None
+            db.session.commit()
+            session.pop("pending_email", None)
+            login_user(user)
+            print(f"[VERIFY] SUCCESS - logged in {email}")
+            flash("Email verified! Welcome to Shoes! 🎉", "success")
+            return redirect(url_for("home"))
 
     return render_template("verify_otp.html", email=email)
 
