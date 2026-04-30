@@ -32,6 +32,11 @@ class QuantityForm(FlaskForm):
         validators=[DataRequired(), NumberRange(min=1, max=10, message="Please select at least 1 item")],
         default=1,
     )
+    size = SelectField(
+        "Size",
+        choices=[(s, s) for s in ["US 6", "US 6.5", "US 7", "US 7.5", "US 8", "US 8.5", "US 9", "US 9.5", "US 10", "US 10.5", "US 11", "US 11.5", "US 12", "US 13"]],
+        validators=[DataRequired()],
+    )
     submit = SubmitField("Add to Cart")
 
 

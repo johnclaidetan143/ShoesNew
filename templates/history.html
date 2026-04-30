@@ -36,7 +36,7 @@
       <div style="margin-top:12px; display:grid; gap:6px;">
         {% for item in order.items %}
         <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem;">
-          <span>{{ item.quantity }}× {{ item.product.name }}</span>
+          <span>{{ item.quantity }}× {{ item.product.name }}{% if item.size %} <span style="background:#F3F4F6; color:#374151; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:6px; margin-left:4px;">{{ item.size }}</span>{% endif %}</span>
           <span style="font-weight:600; color:var(--muted);">₱{{ '%.2f'|format(item.line_total()) }}</span>
         </div>
         {% endfor %}

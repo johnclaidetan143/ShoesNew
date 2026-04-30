@@ -45,6 +45,16 @@
     <!-- Logged in: show Add to Cart form -->
     <form method="post">
       {{ form.hidden_tag() }}
+      <label class="field-label">Size</label>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; margin-bottom:16px;">
+        {% for value, label in form.size.choices %}
+        <label style="cursor:pointer;">
+          <input type="radio" name="size" value="{{ value }}" required style="display:none;"
+            onchange="document.querySelectorAll('.size-btn').forEach(b=>b.style.background='#fff'); this.parentElement.querySelector('.size-btn').style.background='#111827'; this.parentElement.querySelector('.size-btn').style.color='#fff';">
+          <span class="size-btn" style="display:inline-block; padding:8px 14px; border:1.5px solid #E5E7EB; border-radius:10px; font-size:0.82rem; font-weight:600; background:#fff; color:#111827; transition:all 0.15s;">{{ label }}</span>
+        </label>
+        {% endfor %}
+      </div>
       <label class="field-label">Quantity</label>
       <div style="display:flex; align-items:center; gap:12px; margin-top:8px; margin-bottom:20px;">
         <button type="button" onclick="changeQty(-1)"

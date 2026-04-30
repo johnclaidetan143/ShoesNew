@@ -515,7 +515,7 @@ def product_page(product_id):
             if item:
                 item.quantity = min(item.quantity + quantity, product.stock)
             else:
-                item = CartItem(user_id=current_user.id, product_id=product.id, quantity=quantity)
+                item = CartItem(user_id=current_user.id, product_id=product.id, quantity=quantity, size=form.size.data)
                 db.session.add(item)
             db.session.commit()
             flash(f"Added {quantity} pair(s) to your cart.", "success")

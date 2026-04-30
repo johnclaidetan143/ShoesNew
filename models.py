@@ -69,6 +69,7 @@ class CartItem(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
     quantity = db.Column(db.Integer, nullable=False, default=1)
+    size = db.Column(db.String(10), nullable=True)
 
     def subtotal(self):
         return round(self.product.price * self.quantity, 2)
