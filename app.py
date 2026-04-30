@@ -694,6 +694,40 @@ def rate_order(order_id):
     return redirect(url_for("history"))
 
 
+
+@app.route("/order/<int:order_id>/confirm-received", methods=["POST"])
+@login_required
+def confirm_order_received(order_id):
+    order = Order.query.filter_by(id=order_id, user_id=current_user.id).first_or_404()
+    if order.status.lower() != "processing":
+        flash("Only orders that are being processed can be confirmed.", "error")
+        return redirect(url_for("history"))
+    order.status = "Completed"
+    db.session.add(Notification(
+        user_id=current_user.id,
+        message=f"You confirmed receipt of order #{order.id}. Thank you!"
+    ))
+    db.session.commit()
+    # Send confirmation email
+    try:
+        items_text = "\n".join(
+            f"  - {oi.product.name} x{oi.quantity} = \u20b1{oi.line_total():.2f}"
+            for oi in order.items
+        )
+        body = (
+            f"Hi {current_user.name},\n\n"
+            f"You have confirmed receipt of order #{order.id}.\n\n"
+            f"Items:\n{items_text}\n\n"
+            f"Total: \u20b1{order.total:.2f}\n"
+            f"Status: Completed\n\n"
+            f"Thank you for shopping at Shoes! We hope you love your purchase.\n\n-- Shoes Team"
+        )
+        _send_email(current_user.email, f"Order #{order.id} Completed - Shoes", body)
+    except Exception as e:
+        print(f"[CONFIRM EMAIL] Failed: {e}")
+    flash(f"Order #{order.id} marked as completed. Thank you!", "success")
+    return redirect(url_for("history"))
+
 @app.route("/history")
 @login_required
 def history():
