@@ -841,9 +841,21 @@ def contact():
     # Show user's previous messages and replies
     user_messages = []
     if current_user.is_authenticated:
-        user_messages = ContactMessage.query.filter_by(
-            user_id=current_user.id
+        from sqlalchemy import or_
+        user_messages = ContactMessage.query.filter(
+            or_(
+                ContactMessage.user_id == current_user.id,
+                ContactMessage.email == current_user.email
+            )
         ).order_by(ContactMessage.created_at.desc()).all()
+        # Backfill user_id for old messages matched by email
+        for m in user_messages:
+            if m.user_id is None:
+                m.user_id = current_user.id
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
     elif sent:
         # guest - just show sent confirmation
         pass
