@@ -1,8 +1,5 @@
 import os
-import random
-import smtplib
-from email.mime.text import MIMEText
-from datetime import datetime, timedelta
+from datetime import datetime
 from dotenv import load_dotenv
 from flask import (
     Flask,
@@ -11,7 +8,6 @@ from flask import (
     url_for,
     flash,
     request,
-    session,
 )
 from flask_login import (
     LoginManager,
@@ -42,50 +38,6 @@ from models import db, User, Product, CartItem, Order, OrderItem, Notification, 
 
 load_dotenv(override=False)
 
-def send_otp_email(to_email, otp, name):
-    gmail_user = os.getenv("GMAIL_USER", "").strip()
-    gmail_pass = os.getenv("GMAIL_APP_PASSWORD", "").strip()
-
-    print(f"[OTP] Sending to: {to_email}")
-    print(f"[OTP] GMAIL_USER: {gmail_user or 'NOT SET'}")
-    print(f"[OTP] GMAIL_APP_PASSWORD: {'set' if gmail_pass else 'NOT SET'}")
-
-    if not gmail_user or not gmail_pass:
-        print(f"[OTP] FALLBACK OTP for {to_email}: {otp}")
-        return False, "GMAIL_USER or GMAIL_APP_PASSWORD not set"
-
-    body = (
-        f"Hi {name},\n\n"
-        f"Your verification code for Shoes is:\n\n"
-        f"    {otp}\n\n"
-        f"This code expires in 10 minutes.\n"
-        f"Do not share it with anyone.\n\n"
-        f"-- Shoes Team"
-    )
-    msg = MIMEText(body, "plain", "utf-8")
-    msg["Subject"] = "Your OTP Verification Code - Shoes"
-    msg["From"] = gmail_user
-    msg["To"] = to_email
-
-    try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
-            server.login(gmail_user, gmail_pass)
-            server.sendmail(gmail_user, to_email, msg.as_string())
-        print(f"[OTP] Successfully sent to {to_email}")
-        return True, ""
-    except smtplib.SMTPAuthenticationError:
-        err = "Gmail authentication failed. Check GMAIL_APP_PASSWORD."
-        print(f"[OTP] ERROR: {err}")
-        return False, err
-    except Exception as e:
-        print(f"[OTP] ERROR: {e}")
-        return False, str(e)
-
-def maybe_flash_dev_otp(user, email_sent, error_message):
-    if not email_sent:
-        flash(f"Email could not be sent. Your OTP is: {user.otp_code}", "warning")
-
-
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dreamshoe-secret")
 database_url = (os.getenv("DATABASE_URL") or "").strip()
@@ -105,20 +57,15 @@ db.init_app(app)
 
 def _seed_db():
     """Seed default users and products if DB is empty. Safe to call multiple times."""
-    admin = User.query.filter_by(email=ADMIN_EMAIL).first()
-    if not admin:
-        admin = User(name="Admin", email=ADMIN_EMAIL, phone="+1234567890", is_verified=True)
-        admin.set_password("admin@123")
-        db.session.add(admin)
-        db.session.commit()
-
     if Product.query.first():
         return
+    admin = User(name="Admin", email="admin@dreamshoe.com", phone="+1234567890")
+    admin.set_password("admin@123")
     customer = User(name="Samantha Hope", email="customer@example.com", phone="+0987654321")
     customer.set_password("customer@123")
-    db.session.add(customer)
+    db.session.add_all([admin, customer])
     db.session.flush()
-    db.session.add(Notification(user_id=customer.id, message="Welcome to Shoes!"))
+    db.session.add(Notification(user_id=customer.id, message="Welcome to The Dream Shoe - Barili!"))
     products = [
         Product(name="GT Cut 3", category="Basketball", price=3499.99, stock=30, description="Designed for the game's biggest moments with full-length cushioning.", image_url="/static/images/Gt Cut.png"),
         Product(name="Ja Morant 3", category="Basketball", price=2999.99, stock=25, description="Built for explosive guards with Lightstrike Pro cushioning.", image_url="/static/images/JaMorant3_basketball.png"),
@@ -151,23 +98,8 @@ def _seed_db():
 
 @app.before_request
 def create_tables():
-    try:
-        db.create_all()
-        # Ensure OTP columns exist (safe migration for Vercel)
-        with db.engine.connect() as conn:
-            for col, typedef in [
-                ("is_verified", "BOOLEAN DEFAULT 0"),
-                ("otp_code", "VARCHAR(6)"),
-                ("otp_expiry", "DATETIME"),
-            ]:
-                try:
-                    conn.execute(db.text(f"ALTER TABLE users ADD COLUMN {col} {typedef}"))
-                    conn.commit()
-                except Exception:
-                    pass  # Column already exists
-        _seed_db()
-    except Exception as e:
-        print(f"[STARTUP] DB init error: {e}")
+    db.create_all()
+    _seed_db()
 
 csrf = CSRFProtect(app)
 login_manager = LoginManager(app)
@@ -216,25 +148,8 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data.strip().lower()).first()
         if user and user.check_password(form.password.data):
-            is_admin_login = (user.email == ADMIN_EMAIL) or (getattr(user, "role", "") == "admin")
-            if is_admin_login:
-                login_user(user)
-                flash("Welcome back, Admin!", "success")
-                return redirect(url_for("admin_dashboard"))
-            if not user.is_verified:
-                otp = str(random.randint(100000, 999999))
-                user.otp_code = otp
-                user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
-                db.session.commit()
-                email_sent, email_error = send_otp_email(user.email, otp, user.name)
-                maybe_flash_dev_otp(user, email_sent, email_error)
-                flash("Please verify your email first. A new OTP has been sent.", "error")
-                session["pending_email"] = user.email
-            session.permanent = True
-            print(f"[REGISTER] OTP sent to {user.email}")
-            return redirect(url_for("verify_otp", email=user.email))
             login_user(user)
-            flash("Welcome back to Shoes!", "success")
+            flash("Welcome back to The Dream Shoe - Barili!", "success")
             return redirect(next_url if next_url else url_for("home"))
         flash("Invalid email or password.", "error")
     return render_template("login.html", form=form, next_url=next_url)
@@ -251,25 +166,16 @@ def register():
         if existing:
             flash("This email is already registered.", "error")
         else:
-            otp = str(random.randint(100000, 999999))
             user = User(
                 name=form.name.data.strip(),
                 email=form.email.data.strip().lower(),
                 phone=form.phone.data.strip() if form.phone.data else None,
-                is_verified=False,
-                otp_code=otp,
-                otp_expiry=datetime.utcnow() + timedelta(minutes=10),
             )
             user.set_password(form.password.data)
             db.session.add(user)
             db.session.commit()
-            email_sent, email_error = send_otp_email(user.email, otp, user.name)
-            maybe_flash_dev_otp(user, email_sent, email_error)
-            flash("Registration successful! Check your email for the OTP code.", "success")
-            session["pending_email"] = user.email
-            session.permanent = True
-            print(f"[REGISTER] OTP sent to {user.email}")
-            return redirect(url_for("verify_otp", email=user.email))
+            flash("Registration successful. Please log in to continue.", "success")
+            return redirect(url_for("login", next=next_url) if next_url else url_for("login"))
     return render_template("register.html", form=form, next_url=next_url)
 
 
@@ -299,11 +205,7 @@ def home():
         products = products.order_by(Product.price.desc())
     else:
         products = products.order_by(Product.created_at.desc())
-    try:
-        products = products.all()
-    except Exception as e:
-        print(f"[HOME] DB error: {e}")
-        products = []
+    products = products.all()
     search_form = SearchForm(query=search_query)
     return render_template(
         "shop.html",
@@ -337,7 +239,7 @@ def seed_shoe():
     customer.set_password("customer@123")
     db.session.add(customer)
     db.session.flush()
-    db.session.add(Notification(user_id=customer.id, message="Welcome to Shoes! Find your perfect pair."))
+    db.session.add(Notification(user_id=customer.id, message="Welcome to The Dream Shoe - Barili! Find your perfect pair."))
 
     products = [
         Product(name="Nike Air Zoom Pegasus 40", category="Running", price=2599.99, stock=50, description="The Nike Air Zoom Pegasus 40 delivers a smooth, responsive ride for everyday runners.", image_url="/static/images/Men%27s%20Nike%20ACG%20Pegasus%20Trail_running.png"),
@@ -602,93 +504,11 @@ def rate_order(order_id):
     return redirect(url_for("history"))
 
 
-
-@app.route("/verify-otp", methods=["GET", "POST"])
-def verify_otp():
-    email = (
-        request.args.get("email", "")
-        or session.get("pending_email", "")
-        or request.form.get("email", "")
-    ).strip().lower()
-
-    print(f"[VERIFY] email={email!r} method={request.method}")
-
-    if not email:
-        flash("Verification session expired. Please register again.", "error")
-        return redirect(url_for("register"))
-
-    user = User.query.filter_by(email=email).first()
-    if not user:
-        flash("Account not found. Please register again.", "error")
-        return redirect(url_for("register"))
-
-    # If already verified, just log in and go home
-    try:
-        already_verified = bool(user.is_verified)
-    except Exception:
-        already_verified = False
-
-    if already_verified:
-        session.pop("pending_email", None)
-        login_user(user)
-        return redirect(url_for("home"))
-
-    session["pending_email"] = email
-    session.permanent = True
-
-    if request.method == "POST":
-        entered = request.form.get("otp", "").strip()
-        saved = (user.otp_code or "").strip()
-
-        print(f"[VERIFY] entered={entered!r} saved={saved!r}")
-
-        if not saved or not user.otp_expiry:
-            flash("OTP not found. Click Resend OTP.", "error")
-        elif datetime.utcnow() > user.otp_expiry:
-            flash("OTP has expired. Click Resend OTP.", "error")
-        elif entered != saved:
-            flash("Incorrect OTP. Please try again.", "error")
-        else:
-            # OTP correct - update user
-            try:
-                user.is_verified = True
-                user.otp_code = None
-                user.otp_expiry = None
-                db.session.commit()
-                print(f"[VERIFY] DB commit success for {email}")
-            except Exception as e:
-                print(f"[VERIFY] DB commit failed: {e} - proceeding anyway")
-                db.session.rollback()
-                # Even if DB fails, still log in the user
-            session.pop("pending_email", None)
-            login_user(user)
-            print(f"[VERIFY] SUCCESS - logged in {email}")
-            flash("Email verified! Welcome to Shoes!", "success")
-            return redirect(url_for("home"))
-
-    return render_template("verify_otp.html", email=email)
-
-
-@app.route("/resend-otp", methods=["POST"])
-def resend_otp():
-    email = (
-        request.form.get("email", "")
-        or session.get("pending_email", "")
-    ).strip().lower()
-    user = User.query.filter_by(email=email).first()
-    if user and not user.is_verified:
-        otp = str(random.randint(100000, 999999))
-        user.otp_code = otp
-        user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
-        db.session.commit()
-        session["pending_email"] = email
-        session.permanent = True
-        email_sent, email_error = send_otp_email(user.email, otp, user.name)
-        print(f"[RESEND] OTP for {email}: {otp} sent={email_sent}")
-        maybe_flash_dev_otp(user, email_sent, email_error)
-        if email_sent:
-            flash("A new OTP has been sent to your email.", "success")
-    return redirect(url_for("verify_otp", email=email))
+@app.route("/history")
+@login_required
+def history():
+    orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).all()
+    return render_template("history.html", orders=orders)
 
 
 @app.route("/profile", methods=["GET", "POST"])
@@ -772,13 +592,7 @@ def about():
 
 
 def is_admin_user(user):
-    return bool(
-        getattr(user, "is_authenticated", False)
-        and (
-            getattr(user, "email", "") == ADMIN_EMAIL
-            or getattr(user, "role", "") == "admin"
-        )
-    )
+    return bool(getattr(user, "is_authenticated", False) and getattr(user, "email", "") == ADMIN_EMAIL)
 
 
 def require_admin_access():
@@ -1004,7 +818,7 @@ if __name__ == "__main__":
             customer.set_password("customer@123")
             db.session.add_all([admin, customer])
             db.session.flush()
-            db.session.add(Notification(user_id=customer.id, message="Welcome to Shoes!"))
+            db.session.add(Notification(user_id=customer.id, message="Welcome to The Dream Shoe - Barili!"))
             products = [
                 Product(name="GT Cut 3", category="Basketball", price=199.99, stock=30, description="Designed for the game's biggest moments with full-length cushioning.", image_url="/static/images/Gt Cut.png"),
                 Product(name="Ja Morant 3", category="Basketball", price=149.99, stock=25, description="Built for explosive guards with Lightstrike Pro cushioning.", image_url="/static/images/JaMorant3_basketball.png"),
