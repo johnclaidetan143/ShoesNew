@@ -34,7 +34,7 @@ class QuantityForm(FlaskForm):
     )
     size = SelectField(
         "Size",
-        choices=[(s, s) for s in ["US 6", "US 6.5", "US 7", "US 7.5", "US 8", "US 8.5", "US 9", "US 9.5", "US 10", "US 10.5", "US 11", "US 11.5", "US 12", "US 13"]],
+        choices=[(s, s) for s in ["PH 5", "PH 5.5", "PH 6", "PH 6.5", "PH 7", "PH 7.5", "PH 8", "PH 8.5", "PH 9", "PH 9.5", "PH 10", "PH 10.5", "PH 11", "PH 11.5", "PH 12"]],
         validators=[DataRequired()],
     )
     submit = SubmitField("Add to Cart")

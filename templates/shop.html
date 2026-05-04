@@ -121,7 +121,12 @@
         <div class="shop-card-price">₱{{ '%.2f'|format(product.price) }}</div>
         <div class="shop-card-actions">
           <a href="{{ url_for('product_page', product_id=product.id) }}" class="shop-btn-view">Details</a>
-          {% if current_user.is_authenticated %}
+          {% if product.stock == 0 %}
+          <button class="shop-btn-cart" type="button" disabled
+            style="opacity:0.45; cursor:not-allowed;" title="Out of stock">
+            Out
+          </button>
+          {% elif current_user.is_authenticated %}
           <form method="post" action="{{ url_for('product_page', product_id=product.id) }}" style="display:inline;">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
             <input type="hidden" name="quantity" value="1">
@@ -178,3 +183,4 @@
 {% endif %}
 
 {% endblock %}
+

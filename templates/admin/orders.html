@@ -23,12 +23,12 @@
       <tr>
         <td><strong>#{{ order.id }}</strong></td>
         <td>
-          <div style="font-weight:600;">{{ order.user.name }}</div>
-          <div style="font-size:0.75rem; color:#6B7280;">{{ order.user.email }}</div>
+          <div style="font-weight:600;">{{ order.user.name if order.user else 'Unknown user' }}</div>
+          <div style="font-size:0.75rem; color:#6B7280;">{{ order.user.email if order.user else 'No email' }}</div>
         </td>
         <td>
           {% for item in order.items %}
-          <div style="font-size:0.78rem; color:#6B7280;">{{ item.quantity }}× {{ item.product.name }}</div>
+          <div style="font-size:0.78rem; color:#6B7280;">{{ item.quantity }}× {{ item.product.name if item.product else ('Product #' ~ item.product_id) }}</div>
           {% endfor %}
         </td>
         <td><strong>₱{{ '%.2f'|format(order.total) }}</strong></td>
@@ -59,3 +59,4 @@
 </div>
 
 {% endblock %}
+

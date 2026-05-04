@@ -933,7 +933,13 @@ def about():
 
 
 def is_admin_user(user):
-    return bool(getattr(user, "is_authenticated", False) and getattr(user, "email", "") == ADMIN_EMAIL)
+    return bool(
+        getattr(user, "is_authenticated", False)
+        and (
+            getattr(user, "email", "") == ADMIN_EMAIL
+            or getattr(user, "role", "") == "admin"
+        )
+    )
 
 
 def require_admin_access():
